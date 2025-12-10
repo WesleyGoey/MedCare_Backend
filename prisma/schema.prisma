@@ -44,7 +44,7 @@ model Medicine {
   name      String  @db.VarChar(150)
   type      String  @db.VarChar(50)
   dosage    String  @db.VarChar(50)
-  frequency String? @db.VarChar(50)
+  frequency Int     @default(1)
   stock     Int     @default(0)
   minStock  Int
   notes     String? @db.Text
