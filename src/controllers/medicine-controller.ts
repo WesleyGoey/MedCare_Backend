@@ -2,12 +2,13 @@ import { NextFunction, Response } from "express"
 import { UserRequest } from "../models/user-request-model"
 import { MedicineService } from "../services/medicine-service"
 import { MedicineCreateUpdateRequest } from "../models/medicine-model"
+import { ResponseError } from "../error/response-error"
 
 export class MedicineController {
   static async getAllMedicine(req: UserRequest, res: Response, next: NextFunction) {
     try {
-      const response = await MedicineService.getAllMedicine(req.user!)
-      res.status(200).json({ data: response })
+      const data = await MedicineService.getAllMedicine(req.user!)
+      res.status(200).json({ data })
     } catch (error) {
       next(error)
     }
@@ -15,9 +16,12 @@ export class MedicineController {
 
   static async getMedicineById(req: UserRequest, res: Response, next: NextFunction) {
     try {
-      const medicineId = Number(req.params.medicineId)
-      const response = await MedicineService.getMedicineById(req.user!, medicineId)
-      res.status(200).json({ data: response })
+      const id = Number(req.params.medicineId)
+      if (!Number.isInteger(id) || id <= 0) {
+        throw new ResponseError(400, "Invalid medicine id")
+      }
+      const data = await MedicineService.getMedicineById(req.user!, id)
+      res.status(200).json({ data })
     } catch (error) {
       next(error)
     }
@@ -26,8 +30,8 @@ export class MedicineController {
   static async addMedicine(req: UserRequest, res: Response, next: NextFunction) {
     try {
       const reqData = req.body as MedicineCreateUpdateRequest
-      const response = await MedicineService.addMedicine(req.user!, reqData)
-      res.status(201).json({ data: response })
+      const message = await MedicineService.createMedicine(req.user!, reqData)
+      res.status(201).json({ message })
     } catch (error) {
       next(error)
     }
@@ -35,10 +39,13 @@ export class MedicineController {
 
   static async updateMedicine(req: UserRequest, res: Response, next: NextFunction) {
     try {
-      const medicineId = Number(req.params.medicineId)
-      const reqData = req.body as MedicineCreateUpdateRequest
-      const response = await MedicineService.updateMedicine(req.user!, reqData, medicineId)
-      res.status(200).json({ data: response })
+      const id = Number(req.params.medicineId)
+      if (!Number.isInteger(id) || id <= 0) {
+        throw new ResponseError(400, "Invalid medicine id")
+      }
+      const reqData = req.body as Partial<MedicineCreateUpdateRequest>
+      const message = await MedicineService.updateMedicine(req.user!, id, reqData)
+      res.status(200).json({ message })
     } catch (error) {
       next(error)
     }
@@ -46,9 +53,12 @@ export class MedicineController {
 
   static async deleteMedicine(req: UserRequest, res: Response, next: NextFunction) {
     try {
-      const medicineId = Number(req.params.medicineId)
-      const response = await MedicineService.deleteMedicine(req.user!, medicineId)
-      res.status(200).json({ data: response })
+      const id = Number(req.params.medicineId)
+      if (!Number.isInteger(id) || id <= 0) {
+        throw new ResponseError(400, "Invalid medicine id")
+      }
+      const message = await MedicineService.deleteMedicine(req.user!, id)
+      res.status(200).json({ message })
     } catch (error) {
       next(error)
     }
@@ -56,8 +66,8 @@ export class MedicineController {
 
   static async checkLowStock(req: UserRequest, res: Response, next: NextFunction) {
     try {
-      const response = await MedicineService.checkLowStock(req.user!)
-      res.status(200).json({ data: response })
+      const data = await MedicineService.checkLowStock(req.user!)
+      res.status(200).json({ data })
     } catch (error) {
       next(error)
     }

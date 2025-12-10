@@ -4,8 +4,8 @@ export interface MedicineCreateUpdateRequest {
   name: string
   type: string
   dosage: string
-  frequency?: string
-  stock?: number
+  frequency: number
+  stock: number
   minStock: number
   notes?: string
   image?: string

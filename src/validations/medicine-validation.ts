@@ -15,14 +15,14 @@ export class MedicineValidation {
       .min(1, { message: "Dosage can not be empty!" }),
 
     frequency: z
-      .string({ message: "Frequency must be string!" })
-      .optional(),
+      .number({ message: "Frequency must be a number (times per day)!" })
+      .int({ message: "Frequency must be an integer!" })
+      .positive({ message: "Frequency must be > 0" }),
 
     stock: z
       .number({ message: "Stock must be a number!" })
       .int({ message: "Stock must be an integer!" })
-      .min(0, { message: "Stock must be >= 0" })
-      .optional(),
+      .min(0, { message: "Stock must be >= 0" }),
 
     minStock: z
       .number({ message: "minStock must be a number!" })
