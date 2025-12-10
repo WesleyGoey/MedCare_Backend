@@ -94,7 +94,6 @@ export class MedicineService {
   }
 
   static async checkLowStock(user: UserJWTPayload): Promise<MedicineResponse[]> {
-    // Query all user's medicines then filter in JS
     const all = await prismaClient.medicine.findMany({ where: { userId: user.id } })
     const low = all.filter(m => (m.stock ?? 0) <= (m.minStock ?? 0))
     return toMedicineResponseList(low)
