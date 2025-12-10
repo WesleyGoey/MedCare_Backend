@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
@@ -11,5 +8,82 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL") 
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(150)
+  email      String    @unique @db.VarChar(150)
+  password   String    @db.VarChar(100)
+  phone      String    @db.VarChar(50)
+  age        Int                        
+
+  settingId  Int?      @unique
+  settings   Settings? @relation(name: "UserSettings", fields: [settingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  medicines  Medicine[]
+
+  @@map("users")
+  @@index([settingId])
+}
+
+model Settings {
+  id                 Int     @id @default(autoincrement())
+  alarmSound         String  @db.VarChar(100) @default("default_alarm")
+  notificationSound  String  @db.VarChar(100) @default("default_notification")
+
+  user               User?   @relation(name: "UserSettings")
+
+  @@map("settings")
+}
+
+model Medicine {
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  name      String  @db.VarChar(150)
+  type      String  @db.VarChar(50)
+  dosage    String  @db.VarChar(50)
+  frequency String? @db.VarChar(50)
+  stock     Int     @default(0)
+  minStock  Int
+  notes     String? @db.Text
+  image     String? @db.VarChar(255)
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  reminders Reminder[]
+
+  @@map("medicine")
+  @@index([userId])
+}
+
+model Reminder {
+  id         Int            @id @default(autoincrement())
+  medicineId Int
+  time       DateTime
+  status     ReminderStatus @default(PENDING)
+
+  medicine   Medicine       @relation(fields: [medicineId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  histories  History[]
+
+  @@map("reminders")
+  @@index([medicineId])
+}
+
+model History {
+  id         Int      @id @default(autoincrement())
+  reminderId Int
+  date       DateTime
+  timeTaken  DateTime?   // kept optional
+
+  reminder   Reminder @relation(fields: [reminderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("history")
+  @@index([reminderId])
+}
+
+enum ReminderStatus {
+  PENDING
+  DONE
+  MISSED
 }
