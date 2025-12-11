@@ -30,7 +30,7 @@ CREATE TABLE "medicine" (
     "name" VARCHAR(150) NOT NULL,
     "type" VARCHAR(50) NOT NULL,
     "dosage" VARCHAR(50) NOT NULL,
-    "frequency" VARCHAR(50),
+    "frequency" INTEGER NOT NULL DEFAULT 1,
     "stock" INTEGER NOT NULL DEFAULT 0,
     "minStock" INTEGER NOT NULL,
     "notes" TEXT,
