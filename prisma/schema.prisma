@@ -19,8 +19,8 @@ model User {
   phone    String @db.VarChar(50)
   age      Int
 
-  settingId Int       @unique
-  settings  Settings  @relation(name: "UserSettings", fields: [settingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  settingId Int      @unique
+  settings  Settings @relation(name: "UserSettings", fields: [settingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   medicines Medicine[]
 
@@ -51,35 +51,54 @@ model Medicine {
   image     String? @db.VarChar(255)
 
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  reminders Reminder[]
+  schedules Schedule[]
 
   @@index([userId])
   @@map("medicine")
 }
 
-model Reminder {
-  id         Int            @id @default(autoincrement())
-  medicineId Int
-  time       DateTime
-  status     ReminderStatus @default(PENDING)
+model Schedule {
+  id           Int          @id @default(autoincrement())
+  medicineId   Int
+  scheduleType ScheduleType
+  startDate    DateTime
 
-  medicine  Medicine  @relation(fields: [medicineId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  histories History[]
+  medicine Medicine         @relation(fields: [medicineId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  details  ScheduleDetail[]
 
   @@index([medicineId])
-  @@map("reminders")
+  @@map("schedules")
+}
+
+model ScheduleDetail {
+  id         Int            @id @default(autoincrement())
+  scheduleId Int
+  time       DateTime       @db.Time
+  dayOfWeek  Int?           // 0-6 for Sunday-Saturday (WEEKLY), null for DAILY/CUSTOM
+  status     ReminderStatus @default(PENDING)
+
+  schedule  Schedule  @relation(fields: [scheduleId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  histories History[]
+
+  @@index([scheduleId])
+  @@map("schedule_details")
 }
 
 model History {
-  id         Int       @id @default(autoincrement())
-  reminderId Int
-  date       DateTime
-  timeTaken  DateTime?
+  id        Int       @id @default(autoincrement())
+  detailId  Int
+  date      DateTime
+  timeTaken DateTime?
 
-  reminder Reminder @relation(fields: [reminderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  detail ScheduleDetail @relation(fields: [detailId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-  @@index([reminderId])
+  @@index([detailId])
   @@map("history")
+}
+
+enum ScheduleType {
+  DAILY
+  WEEKLY
 }
 
 enum ReminderStatus {

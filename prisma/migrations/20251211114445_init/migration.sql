@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "ScheduleType" AS ENUM ('DAILY', 'WEEKLY');
+
+-- CreateEnum
 CREATE TYPE "ReminderStatus" AS ENUM ('PENDING', 'DONE', 'MISSED');
 
 -- CreateTable
@@ -40,19 +43,30 @@ CREATE TABLE "medicine" (
 );
 
 -- CreateTable
-CREATE TABLE "reminders" (
+CREATE TABLE "schedules" (
     "id" SERIAL NOT NULL,
     "medicineId" INTEGER NOT NULL,
-    "time" TIMESTAMP(3) NOT NULL,
+    "scheduleType" "ScheduleType" NOT NULL,
+    "startDate" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "schedules_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "schedule_details" (
+    "id" SERIAL NOT NULL,
+    "scheduleId" INTEGER NOT NULL,
+    "time" TIME NOT NULL,
+    "dayOfWeek" INTEGER,
     "status" "ReminderStatus" NOT NULL DEFAULT 'PENDING',
 
-    CONSTRAINT "reminders_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "schedule_details_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "history" (
     "id" SERIAL NOT NULL,
-    "reminderId" INTEGER NOT NULL,
+    "detailId" INTEGER NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
     "timeTaken" TIMESTAMP(3),
 
@@ -72,10 +86,13 @@ CREATE INDEX "users_settingId_idx" ON "users"("settingId");
 CREATE INDEX "medicine_userId_idx" ON "medicine"("userId");
 
 -- CreateIndex
-CREATE INDEX "reminders_medicineId_idx" ON "reminders"("medicineId");
+CREATE INDEX "schedules_medicineId_idx" ON "schedules"("medicineId");
 
 -- CreateIndex
-CREATE INDEX "history_reminderId_idx" ON "history"("reminderId");
+CREATE INDEX "schedule_details_scheduleId_idx" ON "schedule_details"("scheduleId");
+
+-- CreateIndex
+CREATE INDEX "history_detailId_idx" ON "history"("detailId");
 
 -- AddForeignKey
 ALTER TABLE "users" ADD CONSTRAINT "users_settingId_fkey" FOREIGN KEY ("settingId") REFERENCES "settings"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -84,7 +101,10 @@ ALTER TABLE "users" ADD CONSTRAINT "users_settingId_fkey" FOREIGN KEY ("settingI
 ALTER TABLE "medicine" ADD CONSTRAINT "medicine_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "reminders" ADD CONSTRAINT "reminders_medicineId_fkey" FOREIGN KEY ("medicineId") REFERENCES "medicine"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "schedules" ADD CONSTRAINT "schedules_medicineId_fkey" FOREIGN KEY ("medicineId") REFERENCES "medicine"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "history" ADD CONSTRAINT "history_reminderId_fkey" FOREIGN KEY ("reminderId") REFERENCES "reminders"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "schedule_details" ADD CONSTRAINT "schedule_details_scheduleId_fkey" FOREIGN KEY ("scheduleId") REFERENCES "schedules"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "history" ADD CONSTRAINT "history_detailId_fkey" FOREIGN KEY ("detailId") REFERENCES "schedule_details"("id") ON DELETE CASCADE ON UPDATE CASCADE;
