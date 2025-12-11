@@ -7,7 +7,9 @@ export const privateRouter = express.Router()
 
 privateRouter.use(authMiddleware)
 
-// Medicine routes
+privateRouter.get("/settings", SettingsController.getSettings)
+privateRouter.patch("/settings", SettingsController.updateSettings)
+
 privateRouter.get("/medicines", MedicineController.getAllMedicine)
 privateRouter.get("/medicines/low-stock", MedicineController.checkLowStock)
 privateRouter.get("/medicines/:medicineId", MedicineController.getMedicineById)
@@ -15,7 +17,6 @@ privateRouter.post("/medicines", MedicineController.addMedicine)
 privateRouter.patch("/medicines/:medicineId", MedicineController.updateMedicine)
 privateRouter.delete("/medicines/:medicineId", MedicineController.deleteMedicine)
 
-// Reminder routes
 privateRouter.get("/reminders", ReminderController.getAllReminders)
 privateRouter.get("/reminders/upcoming", ReminderController.getUpcomingReminders)
 privateRouter.get("/reminders/:reminderId", ReminderController.getReminderById)

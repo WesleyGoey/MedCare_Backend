@@ -19,8 +19,8 @@ model User {
   phone    String @db.VarChar(50)
   age      Int
 
-  settingId Int?      @unique
-  settings  Settings? @relation(name: "UserSettings", fields: [settingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  settingId Int       @unique
+  settings  Settings  @relation(name: "UserSettings", fields: [settingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   medicines Medicine[]
 
@@ -74,7 +74,7 @@ model History {
   id         Int       @id @default(autoincrement())
   reminderId Int
   date       DateTime
-  timeTaken  DateTime? // kept optional
+  timeTaken  DateTime?
 
   reminder Reminder @relation(fields: [reminderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 

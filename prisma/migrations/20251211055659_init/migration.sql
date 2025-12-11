@@ -9,7 +9,7 @@ CREATE TABLE "users" (
     "password" VARCHAR(100) NOT NULL,
     "phone" VARCHAR(50) NOT NULL,
     "age" INTEGER NOT NULL,
-    "settingId" INTEGER,
+    "settingId" INTEGER NOT NULL,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
