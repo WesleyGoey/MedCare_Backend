@@ -12,7 +12,7 @@ import { Validation } from "../validations/validation"
 import { UserJWTPayload } from "../models/user-model"
 
 export class MedicineService {
-  static async getAllMedicine(user: UserJWTPayload): Promise<MedicineResponse[]> {
+  static async getAllMedicines(user: UserJWTPayload): Promise<MedicineResponse[]> {
     const medicines = await prismaClient.medicine.findMany({
       where: { userId: user.id },
       orderBy: { id: "asc" },

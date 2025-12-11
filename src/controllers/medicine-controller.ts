@@ -5,9 +5,9 @@ import { MedicineCreateUpdateRequest } from "../models/medicine-model"
 import { ResponseError } from "../error/response-error"
 
 export class MedicineController {
-  static async getAllMedicine(req: UserRequest, res: Response, next: NextFunction) {
+  static async getAllMedicines(req: UserRequest, res: Response, next: NextFunction) {
     try {
-      const data = await MedicineService.getAllMedicine(req.user!)
+      const data = await MedicineService.getAllMedicines(req.user!)
       res.status(200).json({ data })
     } catch (error) {
       next(error)

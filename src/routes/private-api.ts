@@ -11,7 +11,7 @@ privateRouter.use(authMiddleware)
 privateRouter.get("/settings", SettingsController.getSettings)
 privateRouter.patch("/settings", SettingsController.updateSettings)
 
-privateRouter.get("/medicines", MedicineController.getAllMedicine)
+privateRouter.get("/medicines", MedicineController.getAllMedicines)
 privateRouter.get("/medicines/low-stock", MedicineController.checkLowStock)
 privateRouter.get("/medicines/:medicineId", MedicineController.getMedicineById)
 privateRouter.post("/medicines", MedicineController.addMedicine)
