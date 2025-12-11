@@ -29,6 +29,10 @@ export class UserService {
 
         validatedData.password = await bcrypt.hash(validatedData.password, 10)
 
+        const settings = await prismaClient.settings.create({
+            data: {},
+        })
+
         const user = await prismaClient.user.create({
             data: {
                 name: validatedData.name,
@@ -36,6 +40,7 @@ export class UserService {
                 password: validatedData.password,
                 phone: validatedData.phone,
                 age: validatedData.age,
+                settings: { connect: { id: settings.id } },
             },
         })
 
