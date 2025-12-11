@@ -1,3 +1,4 @@
+import { User } from "../../generated/prisma"
 import { string } from "zod"
 import { generateToken } from "../utils/jwt-util"
 
@@ -38,5 +39,32 @@ export function toUserResponse(
             },
             "1h"
         ),
+    }
+}
+
+// --- added for profile ---
+export interface UserProfileResponse {
+    id: number
+    name: string
+    email: string
+    phone: string
+    age: number
+    settingId?: number
+}
+
+export interface UserUpdateRequest {
+    name?: string
+    phone?: string
+    age?: number
+}
+
+export function toUserProfileResponse(prismaUser: User): UserProfileResponse {
+    return {
+        id: prismaUser.id,
+        name: prismaUser.name,
+        email: prismaUser.email,
+        phone: prismaUser.phone,
+        age: prismaUser.age,
+        settingId: prismaUser.settingId,
     }
 }

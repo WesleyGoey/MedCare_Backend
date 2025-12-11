@@ -3,10 +3,14 @@ import { authMiddleware } from "../middlewares/auth-middleware"
 import { MedicineController } from "../controllers/medicine-controller"
 import { ReminderController } from "../controllers/reminder-controller"
 import { SettingsController } from "../controllers/setting-controller"
+import { UserController } from "../controllers/user-controller"
 
 export const privateRouter = express.Router()
 
 privateRouter.use(authMiddleware)
+
+privateRouter.get("/profile", UserController.getProfile)
+privateRouter.patch("/profile", UserController.updateProfile)
 
 privateRouter.get("/settings", SettingsController.getSettings)
 privateRouter.patch("/settings", SettingsController.updateSettings)
