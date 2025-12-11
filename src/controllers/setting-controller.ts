@@ -1,7 +1,7 @@
 import { NextFunction, Response } from "express"
 import { UserRequest } from "../models/user-request-model"
-import { SettingsService } from "../services/settings-service"
-import { SettingsCreateUpdateRequest } from "../models/settings-model"
+import { SettingsService } from "../services/setting-service"
+import { SettingsCreateUpdateRequest } from "../models/setting-model"
 import { ResponseError } from "../error/response-error"
 
 export class SettingsController {
