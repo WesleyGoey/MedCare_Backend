@@ -2,6 +2,7 @@ import express from "express"
 import { authMiddleware } from "../middlewares/auth-middleware"
 import { MedicineController } from "../controllers/medicine-controller"
 import { ReminderController } from "../controllers/reminder-controller"
+import { SettingsController } from "../controllers/setting-controller"
 
 export const privateRouter = express.Router()
 
