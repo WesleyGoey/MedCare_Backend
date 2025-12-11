@@ -12,28 +12,28 @@ datasource db {
 }
 
 model User {
-  id         Int       @id @default(autoincrement())
-  name       String    @db.VarChar(150)
-  email      String    @unique @db.VarChar(150)
-  password   String    @db.VarChar(100)
-  phone      String    @db.VarChar(50)
-  age        Int                        
+  id       Int    @id @default(autoincrement())
+  name     String @db.VarChar(150)
+  email    String @unique @db.VarChar(150)
+  password String @db.VarChar(100)
+  phone    String @db.VarChar(50)
+  age      Int
 
-  settingId  Int?      @unique
-  settings   Settings? @relation(name: "UserSettings", fields: [settingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  settingId Int?      @unique
+  settings  Settings? @relation(name: "UserSettings", fields: [settingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-  medicines  Medicine[]
+  medicines Medicine[]
 
-  @@map("users")
   @@index([settingId])
+  @@map("users")
 }
 
 model Settings {
-  id                 Int     @id @default(autoincrement())
-  alarmSound         String  @db.VarChar(100) @default("default_alarm")
-  notificationSound  String  @db.VarChar(100) @default("default_notification")
+  id                Int    @id @default(autoincrement())
+  alarmSound        String @default("Default") @db.VarChar(100)
+  notificationSound String @default("Default") @db.VarChar(100)
 
-  user               User?   @relation(name: "UserSettings")
+  user User? @relation(name: "UserSettings")
 
   @@map("settings")
 }
@@ -50,11 +50,11 @@ model Medicine {
   notes     String? @db.Text
   image     String? @db.VarChar(255)
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   reminders Reminder[]
 
-  @@map("medicine")
   @@index([userId])
+  @@map("medicine")
 }
 
 model Reminder {
@@ -63,23 +63,23 @@ model Reminder {
   time       DateTime
   status     ReminderStatus @default(PENDING)
 
-  medicine   Medicine       @relation(fields: [medicineId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  histories  History[]
+  medicine  Medicine  @relation(fields: [medicineId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  histories History[]
 
-  @@map("reminders")
   @@index([medicineId])
+  @@map("reminders")
 }
 
 model History {
-  id         Int      @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   reminderId Int
   date       DateTime
-  timeTaken  DateTime?   // kept optional
+  timeTaken  DateTime? // kept optional
 
-  reminder   Reminder @relation(fields: [reminderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  reminder Reminder @relation(fields: [reminderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-  @@map("history")
   @@index([reminderId])
+  @@map("history")
 }
 
 enum ReminderStatus {
