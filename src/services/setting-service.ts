@@ -78,7 +78,7 @@ export class SettingsService {
     if (!settingsId) {
       const created = await prismaClient.settings.create({ data: {} })
       settingsId = created.id
-      await prismaClient.user.update({ where: { id: user.id }, data: { settingId } })
+      await prismaClient.user.update({ where: { id: user.id }, data: { settingId: settingsId } })
     }
 
     const data: any = {}
