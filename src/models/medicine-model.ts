@@ -1,4 +1,6 @@
 import { Medicine } from "../../generated/prisma"
+import { Reminder } from "../../generated/prisma"
+import { ReminderResponse, toReminderResponseList } from "./reminder-model"
 
 export interface MedicineCreateUpdateRequest {
   name: string
@@ -33,4 +35,24 @@ export function toMedicineResponse(prismaMedicine: Medicine): MedicineResponse {
     notes: prismaMedicine.notes ?? undefined,
     image: prismaMedicine.image ?? undefined,
   }
+}
+
+export interface MedicineWithRemindersResponse extends MedicineResponse {
+  reminders: ReminderResponse[]
+}
+
+export function toMedicineWithRemindersResponse(
+  prismaMedicine: Medicine & { reminders?: Reminder[] }
+): MedicineWithRemindersResponse {
+  const base = toMedicineResponse(prismaMedicine)
+  return {
+    ...base,
+    reminders: toReminderResponseList(prismaMedicine.reminders ?? []),
+  }
+}
+
+export function toMedicineWithRemindersResponseList(
+  prismaMedicines: (Medicine & { reminders?: Reminder[] })[]
+): MedicineWithRemindersResponse[] {
+  return prismaMedicines.map((m) => toMedicineWithRemindersResponse(m))
 }

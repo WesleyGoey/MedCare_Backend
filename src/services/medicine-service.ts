@@ -5,6 +5,8 @@ import {
   MedicineResponse,
   toMedicineResponse,
   toMedicineResponseList,
+  MedicineWithRemindersResponse,
+  toMedicineWithRemindersResponseList,
 } from "../models/medicine-model"
 import { prismaClient } from "../utils/database-util"
 import { MedicineValidation } from "../validations/medicine-validation"
@@ -20,9 +22,37 @@ export class MedicineService {
     return toMedicineResponseList(medicines)
   }
 
+  static async getAllMedicinesWithReminders(user: UserJWTPayload): Promise<MedicineWithRemindersResponse[]> {
+    const medicines = await prismaClient.medicine.findMany({
+      where: { userId: user.id },
+      include: {
+        reminders: {
+          orderBy: { time: "asc" },
+        },
+      },
+      orderBy: { id: "asc" },
+    })
+    return toMedicineWithRemindersResponseList(medicines as any)
+  }
+
   static async getMedicineById(user: UserJWTPayload, id: number): Promise<MedicineResponse> {
     const medicine = await this.checkMedicineExists(user.id, id)
     return toMedicineResponse(medicine)
+  }
+
+  static async getMedicineByIdWithReminders(user: UserJWTPayload, id: number): Promise<MedicineWithRemindersResponse> {
+    const medicine = await prismaClient.medicine.findFirst({
+      where: { id, userId: user.id },
+      include: {
+        reminders: {
+          orderBy: { time: "asc" },
+        },
+      },
+    })
+    if (!medicine) {
+      throw new ResponseError(404, "Medicine not found!")
+    }
+    return toMedicineWithRemindersResponseList([medicine as any])[0]
   }
 
   static async checkMedicineExists(userId: number, id: number): Promise<Medicine> {

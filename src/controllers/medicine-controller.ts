@@ -7,6 +7,12 @@ import { ResponseError } from "../error/response-error"
 export class MedicineController {
   static async getAllMedicines(req: UserRequest, res: Response, next: NextFunction) {
     try {
+      const includeReminders = String(req.query.includeReminders ?? "").toLowerCase()
+      if (includeReminders === "1" || includeReminders === "true") {
+        const data = await MedicineService.getAllMedicinesWithReminders(req.user!)
+        res.status(200).json({ data })
+        return
+      }
       const data = await MedicineService.getAllMedicines(req.user!)
       res.status(200).json({ data })
     } catch (error) {
@@ -19,6 +25,12 @@ export class MedicineController {
       const id = Number(req.params.medicineId)
       if (!Number.isInteger(id) || id <= 0) {
         throw new ResponseError(400, "Invalid medicine id")
+      }
+      const includeReminders = String(req.query.includeReminders ?? "").toLowerCase()
+      if (includeReminders === "1" || includeReminders === "true") {
+        const data = await MedicineService.getMedicineByIdWithReminders(req.user!, id)
+        res.status(200).json({ data })
+        return
       }
       const data = await MedicineService.getMedicineById(req.user!, id)
       res.status(200).json({ data })

@@ -15,9 +15,9 @@ privateRouter.patch("/profile", UserController.updateProfile)
 privateRouter.get("/settings", SettingsController.getSettings)
 privateRouter.patch("/settings", SettingsController.updateSettings)
 
-privateRouter.get("/medicines", MedicineController.getAllMedicines)
+privateRouter.get("/medicines", MedicineController.getAllMedicines) // supports ?includeReminders=1
 privateRouter.get("/medicines/low-stock", MedicineController.checkLowStock)
-privateRouter.get("/medicines/:medicineId", MedicineController.getMedicineById)
+privateRouter.get("/medicines/:medicineId", MedicineController.getMedicineById) // supports ?includeReminders=1
 privateRouter.post("/medicines", MedicineController.addMedicine)
 privateRouter.patch("/medicines/:medicineId", MedicineController.updateMedicine)
 privateRouter.delete("/medicines/:medicineId", MedicineController.deleteMedicine)
@@ -25,7 +25,7 @@ privateRouter.delete("/medicines/:medicineId", MedicineController.deleteMedicine
 privateRouter.get("/reminders", ReminderController.getAllReminders)
 privateRouter.get("/reminders/upcoming", ReminderController.getUpcomingReminders)
 privateRouter.get("/reminders/:reminderId", ReminderController.getReminderById)
-privateRouter.get("/medicines/:medicineId/reminders", ReminderController.getRemindersByMedicine)
+privateRouter.get("/medicines/:medicineId/reminders", ReminderController.getRemindersByMedicine) //p
 privateRouter.post("/reminders", ReminderController.addReminder)
 privateRouter.patch("/reminders/:reminderId", ReminderController.updateReminder)
 privateRouter.delete("/reminders/:reminderId", ReminderController.deleteReminder)
