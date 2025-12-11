@@ -17,8 +17,8 @@ CREATE TABLE "users" (
 -- CreateTable
 CREATE TABLE "settings" (
     "id" SERIAL NOT NULL,
-    "alarmSound" VARCHAR(100) NOT NULL DEFAULT 'default_alarm',
-    "notificationSound" VARCHAR(100) NOT NULL DEFAULT 'default_notification',
+    "alarmSound" VARCHAR(100) NOT NULL DEFAULT 'Default',
+    "notificationSound" VARCHAR(100) NOT NULL DEFAULT 'Default',
 
     CONSTRAINT "settings_pkey" PRIMARY KEY ("id")
 );
