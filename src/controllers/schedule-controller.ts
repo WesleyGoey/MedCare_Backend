@@ -112,4 +112,43 @@ export class ScheduleController {
       next(error)
     }
   }
+
+  // Mark as Taken
+  static async markAsTaken(req: UserRequest, res: Response, next: NextFunction) {
+    try {
+      const detailId = Number(req.params.detailId)
+      if (!Number.isInteger(detailId) || detailId <= 0) throw new ResponseError(400, "Invalid detail id")
+      const { date, timeTaken } = req.body
+      const message = await ScheduleService.markDetailAsTaken(req.user!, detailId, date, timeTaken)
+      res.status(200).json({ message })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  // Skip (suppress alarm)
+  static async skip(req: UserRequest, res: Response, next: NextFunction) {
+    try {
+      const detailId = Number(req.params.detailId)
+      if (!Number.isInteger(detailId) || detailId <= 0) throw new ResponseError(400, "Invalid detail id")
+      const { date } = req.body
+      const message = await ScheduleService.skipDetail(req.user!, detailId, date)
+      res.status(200).json({ message })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  // Undo Mark as Taken
+  static async undoMarkAsTaken(req: UserRequest, res: Response, next: NextFunction) {
+    try {
+      const detailId = Number(req.params.detailId)
+      if (!Number.isInteger(detailId) || detailId <= 0) throw new ResponseError(400, "Invalid detail id")
+      const { date } = req.body
+      const message = await ScheduleService.undoMarkAsTaken(req.user!, detailId, date)
+      res.status(200).json({ message })
+    } catch (error) {
+      next(error)
+    }
+  }
 }

@@ -176,4 +176,134 @@ export class ScheduleService {
     await prismaClient.scheduleDetail.delete({ where: { id: detailId } })
     return "Schedule detail deleted successfully!"
   }
+
+  // Mark detail as taken
+  static async markDetailAsTaken(
+    user: UserJWTPayload,
+    detailId: number,
+    dateStr?: string,
+    timeTakenStr?: string
+  ): Promise<string> {
+    const detail = await prismaClient.scheduleDetail.findFirst({
+      where: { id: detailId },
+      include: { schedule: { include: { medicine: true } } },
+    })
+    if (!detail || (detail as any).schedule?.medicine?.userId !== user.id) {
+      throw new ResponseError(404, "Schedule detail not found")
+    }
+
+    const date = dateStr ? new Date(dateStr) : new Date()
+    if (isNaN(date.getTime())) throw new ResponseError(400, "Invalid date")
+    const dayStart = new Date(date)
+    dayStart.setHours(0, 0, 0, 0)
+
+    let timeTaken: Date
+    if (timeTakenStr) {
+      const parsed = new Date(timeTakenStr)
+      timeTaken = isNaN(parsed.getTime())
+        ? new Date(`${dayStart.toISOString().substr(0, 10)}T${timeTakenStr}:00Z`)
+        : parsed
+    } else {
+      timeTaken = new Date()
+    }
+
+    await prismaClient.$transaction([
+      prismaClient.history.create({
+        data: {
+          detailId,
+          date: dayStart,
+          timeTaken,
+        },
+      }),
+      prismaClient.scheduleDetail.update({
+        where: { id: detailId },
+        data: { status: "DONE" },
+      }),
+      prismaClient.suppression.deleteMany({
+        where: {
+          detailId,
+          date: dayStart,
+          userId: user.id,
+        },
+      }),
+    ])
+
+    return "Marked as taken"
+  }
+
+  // Skip detail (suppress alarm only)
+  static async skipDetail(
+    user: UserJWTPayload,
+    detailId: number,
+    dateStr?: string
+  ): Promise<string> {
+    const detail = await prismaClient.scheduleDetail.findFirst({
+      where: { id: detailId, schedule: { medicine: { userId: user.id } } },
+    })
+    if (!detail) throw new ResponseError(404, "Schedule detail not found")
+
+    const date = dateStr ? new Date(dateStr) : new Date()
+    if (isNaN(date.getTime())) throw new ResponseError(400, "Invalid date")
+    const dayStart = new Date(date)
+    dayStart.setHours(0, 0, 0, 0)
+    const expiresAt = new Date(dayStart)
+    expiresAt.setDate(expiresAt.getDate() + 1)
+
+    await prismaClient.suppression.create({
+      data: {
+        userId: user.id,
+        detailId,
+        date: dayStart,
+        expiresAt,
+      },
+    })
+
+    return "Alarm muted for this occurrence"
+  }
+
+  // Undo mark as taken
+  static async undoMarkAsTaken(
+    user: UserJWTPayload,
+    detailId: number,
+    dateStr?: string
+  ): Promise<string> {
+    const detail = await prismaClient.scheduleDetail.findFirst({
+      where: { id: detailId },
+      include: { schedule: { include: { medicine: true } } },
+    })
+    if (!detail || (detail as any).schedule?.medicine?.userId !== user.id) {
+      throw new ResponseError(404, "Schedule detail not found")
+    }
+
+    const date = dateStr ? new Date(dateStr) : new Date()
+    if (isNaN(date.getTime())) throw new ResponseError(400, "Invalid date")
+    const dayStart = new Date(date)
+    dayStart.setHours(0, 0, 0, 0)
+
+    const lastHist = await prismaClient.history.findFirst({
+      where: { detailId, date: dayStart },
+      orderBy: { id: "desc" },
+    })
+    if (!lastHist) throw new ResponseError(404, "No history to undo")
+
+    await prismaClient.$transaction([
+      prismaClient.history.delete({ where: { id: lastHist.id } }),
+      prismaClient.scheduleDetail.update({
+        where: { id: detailId },
+        data: { status: "PENDING" },
+      }),
+    ])
+
+    return "Undo successful"
+  }
+
+  // Check if suppressed (for alarm dispatcher)
+  static async isSuppressed(userId: number, detailId: number, date: Date): Promise<boolean> {
+    const dayStart = new Date(date)
+    dayStart.setHours(0, 0, 0, 0)
+    const sup = await prismaClient.suppression.findFirst({
+      where: { detailId, userId, date: dayStart, expiresAt: { gt: new Date() } },
+    })
+    return !!sup
+  }
 }
