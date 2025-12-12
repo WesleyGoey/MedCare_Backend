@@ -112,4 +112,43 @@ export class ScheduleController {
       next(error)
     }
   }
+
+  // POST /schedules/details/:detailId/take
+  static async markDetailTaken(req: UserRequest, res: Response, next: NextFunction) {
+    try {
+      const detailId = Number(req.params.detailId)
+      if (!Number.isInteger(detailId) || detailId <= 0) throw new ResponseError(400, "Invalid detail id")
+      const body = req.body as { date?: string; timeTaken?: string }
+      const message = await ScheduleService.markDetailAsTaken(req.user!, detailId, body?.date, body?.timeTaken)
+      res.status(200).json({ message })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  // POST /schedules/details/:detailId/skip
+  static async skipDetail(req: UserRequest, res: Response, next: NextFunction) {
+    try {
+      const detailId = Number(req.params.detailId)
+      if (!Number.isInteger(detailId) || detailId <= 0) throw new ResponseError(400, "Invalid detail id")
+      const body = req.body as { date?: string }
+      const message = await ScheduleService.skipDetail(req.user!, detailId, body?.date)
+      res.status(200).json({ message })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  // POST /schedules/details/:detailId/undo
+  static async undoTaken(req: UserRequest, res: Response, next: NextFunction) {
+    try {
+      const detailId = Number(req.params.detailId)
+      if (!Number.isInteger(detailId) || detailId <= 0) throw new ResponseError(400, "Invalid detail id")
+      const body = req.body as { date?: string }
+      const message = await ScheduleService.undoMarkAsTaken(req.user!, detailId, body?.date)
+      res.status(200).json({ message })
+    } catch (error) {
+      next(error)
+    }
+  }
 }
