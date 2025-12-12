@@ -34,4 +34,4 @@ privateRouter.delete("/schedules/details/:detailId", ScheduleController.deleteSc
 
 privateRouter.post("/schedules/details/:detailId/mark-taken", ScheduleController.markAsTaken)
 privateRouter.post("/schedules/details/:detailId/skip", ScheduleController.skip)
-privateRouter.post("/schedules/details/:detailId/undo", ScheduleController.undoMarkAsTaken)
+privateRouter.post("/schedules/details/:detailId/undo-taken", ScheduleController.undoMarkAsTaken)
