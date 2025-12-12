@@ -25,9 +25,9 @@ privateRouter.delete("/medicines/:medicineId", MedicineController.deleteMedicine
 privateRouter.get("/schedules", ScheduleController.getAllScheduleWithDetails)
 privateRouter.get("/schedules/by-date", ScheduleController.getScheduleWithDetailsByDate)
 privateRouter.get("/schedules/:scheduleId", ScheduleController.getScheduleWithDetailsById)
-privateRouter.post("/schedules", ScheduleController.createScheduleWithDetails)
-privateRouter.post("/schedules/:scheduleId/details", ScheduleController.createScheduleDetails)
-privateRouter.patch("/schedules/:scheduleId", ScheduleController.updateScheduleWithDetails)
-privateRouter.patch("/schedules/details/:detailId", ScheduleController.updateScheduleDetails)
-privateRouter.delete("/schedules/:scheduleId", ScheduleController.deleteScheduleWithDetails)
-privateRouter.delete("/schedules/details/:detailId", ScheduleController.deleteScheduleDetails)
+privateRouter.post("/schedules", ScheduleController.createScheduleWithDetails) //keseuruhan
+privateRouter.post("/schedules/:scheduleId/details", ScheduleController.createScheduleDetails) //jamnya
+privateRouter.patch("/schedules/:scheduleId", ScheduleController.updateScheduleWithDetails) //keseuruhan
+privateRouter.patch("/schedules/details/:detailId", ScheduleController.updateScheduleDetails) //jamnya
+privateRouter.delete("/schedules/:scheduleId", ScheduleController.deleteScheduleWithDetails) //keseuruhan
+privateRouter.delete("/schedules/details/:detailId", ScheduleController.deleteScheduleDetails) //jamnya
