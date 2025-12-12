@@ -5,50 +5,56 @@ import { MedicineCreateUpdateRequest } from "../models/medicine-model"
 import { ResponseError } from "../error/response-error"
 
 export class MedicineController {
+  // Get All Medicine (include schedule with details)
   static async getAllMedicines(req: UserRequest, res: Response, next: NextFunction) {
     try {
-      const includeReminders = String(req.query.includeReminders ?? "").toLowerCase()
-      if (includeReminders === "1" || includeReminders === "true") {
-        const data = await MedicineService.getAllMedicinesWithReminders(req.user!)
-        res.status(200).json({ data })
-        return
-      }
-      const data = await MedicineService.getAllMedicines(req.user!)
+      // Support query param: ?includeSchedule=1 to include schedules with details
+      const includeSchedule = String(req.query.includeSchedule ?? "").toLowerCase() === "1" || String(req.query.includeSchedule ?? "").toLowerCase() === "true"
+      const data = await MedicineService.getAllMedicines(req.user!, includeSchedule)
       res.status(200).json({ data })
     } catch (error) {
       next(error)
     }
   }
 
+  // Check Low Stock
+  static async checkLowStock(req: UserRequest, res: Response, next: NextFunction) {
+    try {
+      const data = await MedicineService.checkLowStock(req.user!)
+      res.status(200).json({ data })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  // Get Medicine By Id (include schedule with details)
   static async getMedicineById(req: UserRequest, res: Response, next: NextFunction) {
     try {
       const id = Number(req.params.medicineId)
       if (!Number.isInteger(id) || id <= 0) {
         throw new ResponseError(400, "Invalid medicine id")
       }
-      const includeReminders = String(req.query.includeReminders ?? "").toLowerCase()
-      if (includeReminders === "1" || includeReminders === "true") {
-        const data = await MedicineService.getMedicineByIdWithReminders(req.user!, id)
-        res.status(200).json({ data })
-        return
-      }
-      const data = await MedicineService.getMedicineById(req.user!, id)
+      // Support query param: ?includeSchedule=1 to include schedules with details
+      const includeSchedule = String(req.query.includeSchedule ?? "").toLowerCase() === "1" || String(req.query.includeSchedule ?? "").toLowerCase() === "true"
+      const data = await MedicineService.getMedicineById(req.user!, id, includeSchedule)
       res.status(200).json({ data })
     } catch (error) {
       next(error)
     }
   }
 
+  // Add Medicine
   static async addMedicine(req: UserRequest, res: Response, next: NextFunction) {
     try {
       const reqData = req.body as MedicineCreateUpdateRequest
-      const message = await MedicineService.createMedicine(req.user!, reqData)
+      const message = await MedicineService.addMedicine(req.user!, reqData)
       res.status(201).json({ message })
     } catch (error) {
       next(error)
     }
   }
 
+  // Update Medicine
   static async updateMedicine(req: UserRequest, res: Response, next: NextFunction) {
     try {
       const id = Number(req.params.medicineId)
@@ -63,6 +69,7 @@ export class MedicineController {
     }
   }
 
+  // Delete Medicine
   static async deleteMedicine(req: UserRequest, res: Response, next: NextFunction) {
     try {
       const id = Number(req.params.medicineId)
@@ -71,15 +78,6 @@ export class MedicineController {
       }
       const message = await MedicineService.deleteMedicine(req.user!, id)
       res.status(200).json({ message })
-    } catch (error) {
-      next(error)
-    }
-  }
-
-  static async checkLowStock(req: UserRequest, res: Response, next: NextFunction) {
-    try {
-      const data = await MedicineService.checkLowStock(req.user!)
-      res.status(200).json({ data })
     } catch (error) {
       next(error)
     }
