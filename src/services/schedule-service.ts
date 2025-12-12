@@ -21,7 +21,7 @@ export class ScheduleService {
     })
     return toScheduleDetailResponseList(details as any)
   }
-//p
+
   // Get Schedule With Details By Date
   static async getScheduleWithDetailsByDate(user: UserJWTPayload, dateStr: string): Promise<ScheduleDetailResponse[]> {
     const date = new Date(dateStr)
