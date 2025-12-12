@@ -74,7 +74,6 @@ model ScheduleDetail {
   scheduleId Int
   time       DateTime       @db.Time
   dayOfWeek  Int?           // 0-6 for Sunday-Saturday (WEEKLY), null for DAILY/CUSTOM
-  status     ReminderStatus @default(PENDING)
 
   schedule  Schedule  @relation(fields: [scheduleId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   histories History[]
@@ -88,6 +87,7 @@ model History {
   detailId  Int
   date      DateTime
   timeTaken DateTime?
+  status    ReminderStatus @default(PENDING)
 
   detail ScheduleDetail @relation(fields: [detailId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 

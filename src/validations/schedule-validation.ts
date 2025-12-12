@@ -16,6 +16,5 @@ export class ScheduleValidation {
   static readonly UPDATE_DETAIL: ZodType = z.object({
     time: z.string().regex(/^\d{2}:\d{2}$/, "Time must be in HH:mm format").optional(),
     dayOfWeek: z.number().int().min(0).max(6).optional(),
-    status: z.enum(["PENDING", "DONE", "MISSED"]).optional(),
   })
 }

@@ -26,7 +26,6 @@ export interface ScheduleDetailResponse {
   scheduleId: number
   time: string // "HH:mm" formatted
   dayOfWeek?: number | null
-  status: string
   medicine: {
     id: number
     name: string
@@ -50,7 +49,6 @@ export function toScheduleDetailResponse(
     scheduleId: d.scheduleId,
     time: timeStr,
     dayOfWeek: d.dayOfWeek ?? null,
-    status: d.status,
     medicine: {
       id: (d.schedule as any)?.medicine?.id ?? 0,
       name: (d.schedule as any)?.medicine?.name ?? "",

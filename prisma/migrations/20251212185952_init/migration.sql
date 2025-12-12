@@ -57,7 +57,6 @@ CREATE TABLE "schedule_details" (
     "scheduleId" INTEGER NOT NULL,
     "time" TIME NOT NULL,
     "dayOfWeek" INTEGER,
-    "status" "ReminderStatus" NOT NULL DEFAULT 'PENDING',
 
     CONSTRAINT "schedule_details_pkey" PRIMARY KEY ("id")
 );
@@ -68,19 +67,9 @@ CREATE TABLE "history" (
     "detailId" INTEGER NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
     "timeTaken" TIMESTAMP(3),
+    "status" "ReminderStatus" NOT NULL DEFAULT 'PENDING',
 
     CONSTRAINT "history_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "suppressions" (
-    "id" SERIAL NOT NULL,
-    "userId" INTEGER NOT NULL,
-    "detailId" INTEGER NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL,
-    "expiresAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "suppressions_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -103,12 +92,6 @@ CREATE INDEX "schedule_details_scheduleId_idx" ON "schedule_details"("scheduleId
 
 -- CreateIndex
 CREATE INDEX "history_detailId_idx" ON "history"("detailId");
-
--- CreateIndex
-CREATE INDEX "suppressions_userId_idx" ON "suppressions"("userId");
-
--- CreateIndex
-CREATE INDEX "suppressions_detailId_idx" ON "suppressions"("detailId");
 
 -- AddForeignKey
 ALTER TABLE "users" ADD CONSTRAINT "users_settingId_fkey" FOREIGN KEY ("settingId") REFERENCES "settings"("id") ON DELETE CASCADE ON UPDATE CASCADE;

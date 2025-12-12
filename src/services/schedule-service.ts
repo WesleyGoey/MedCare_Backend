@@ -149,7 +149,7 @@ export class ScheduleService {
     const data: any = {}
     if (validated.time) data.time = new Date(`1970-01-01T${validated.time}:00Z`)
     if (validated.dayOfWeek !== undefined) data.dayOfWeek = validated.dayOfWeek
-    if (validated.status) data.status = validated.status
+    // if (validated.status) data.status = validated.status
 
     await prismaClient.scheduleDetail.update({ where: { id: detailId }, data })
     return "Schedule detail updated successfully!"
@@ -213,12 +213,10 @@ export class ScheduleService {
           detailId,
           date: dayStart,
           timeTaken,
+          status: "DONE",
         },
       }),
-      prismaClient.scheduleDetail.update({
-        where: { id: detailId },
-        data: { status: "DONE" },
-      }),
+      // removed scheduleDetail.status update; status now recorded in history
       prismaClient.suppression.deleteMany({
         where: {
           detailId,
@@ -288,10 +286,7 @@ export class ScheduleService {
 
     await prismaClient.$transaction([
       prismaClient.history.delete({ where: { id: lastHist.id } }),
-      prismaClient.scheduleDetail.update({
-        where: { id: detailId },
-        data: { status: "PENDING" },
-      }),
+      // removed scheduleDetail status revert; history deletion is the source of truth
     ])
 
     return "Undo successful"

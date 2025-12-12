@@ -49,7 +49,6 @@ export interface ScheduleDetailBasicResponse {
   id: number
   time: string
   dayOfWeek?: number | null
-  status: string
 }
 
 export function toMedicineWithScheduleDetailsResponse(
@@ -66,7 +65,6 @@ export function toMedicineWithScheduleDetailsResponse(
         id: d.id,
         time: d.time instanceof Date ? d.time.toISOString().substr(11, 5) : String(d.time).substr(0, 5),
         dayOfWeek: d.dayOfWeek ?? null,
-        status: d.status,
       })),
     })),
   }

@@ -6,7 +6,7 @@ export type HistoryResponse = {
     scheduledDate: Date;
     scheduledTime: Date; // Ambil dari detail.time
     timeTaken: Date | null;
-    status: "DONE" | "MISSED";
+    status: "PENDING" | "DONE" | "MISSED";
 }
 
 export type ComplianceResponse = {
@@ -36,6 +36,6 @@ export function toHistoryResponse(history: any): HistoryResponse {
         scheduledDate: h.date,
         scheduledTime: h.detail?.time, 
         timeTaken: h.timeTaken,
-        status: h.timeTaken ? "DONE" : "MISSED"
+        status: (h as any).status ?? (h.timeTaken ? "DONE" : "MISSED")
     }
 }
