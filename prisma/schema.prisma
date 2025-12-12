@@ -95,18 +95,6 @@ model History {
   @@map("history")
 }
 
-model Suppression {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  detailId  Int
-  date      DateTime
-  expiresAt DateTime
-
-  @@index([userId])
-  @@index([detailId])
-  @@map("suppressions")
-}
-
 enum ScheduleType {
   DAILY
   WEEKLY
