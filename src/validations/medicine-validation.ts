@@ -14,11 +14,6 @@ export class MedicineValidation {
       .string({ message: "Dosage must be string!" })
       .min(1, { message: "Dosage can not be empty!" }),
 
-    frequency: z
-      .number({ message: "Frequency must be a number (times per day)!" })
-      .int({ message: "Frequency must be an integer!" })
-      .positive({ message: "Frequency must be > 0" }),
-
     stock: z
       .number({ message: "Stock must be a number!" })
       .int({ message: "Stock must be an integer!" })

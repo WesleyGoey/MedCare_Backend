@@ -5,8 +5,9 @@ import {
   MedicineResponse,
   toMedicineResponse,
   toMedicineResponseList,
-  MedicineWithRemindersResponse,
-  toMedicineWithRemindersResponseList,
+  MedicineWithScheduleDetailsResponse,
+  toMedicineWithScheduleDetailsResponse,
+  toMedicineWithScheduleDetailsResponseList,
 } from "../models/medicine-model"
 import { prismaClient } from "../utils/database-util"
 import { MedicineValidation } from "../validations/medicine-validation"
@@ -14,7 +15,24 @@ import { Validation } from "../validations/validation"
 import { UserJWTPayload } from "../models/user-model"
 
 export class MedicineService {
-  static async getAllMedicines(user: UserJWTPayload): Promise<MedicineResponse[]> {
+  static async getAllMedicines(user: UserJWTPayload, includeSchedule: boolean = false): Promise<MedicineResponse[] | MedicineWithScheduleDetailsResponse[]> {
+    if (includeSchedule) {
+      const medicines = await prismaClient.medicine.findMany({
+        where: { userId: user.id },
+        include: {
+          schedules: {
+            include: {
+              details: {
+                orderBy: { time: "asc" },
+              },
+            },
+          },
+        },
+        orderBy: { id: "asc" },
+      })
+      return toMedicineWithScheduleDetailsResponseList(medicines as any)
+    }
+
     const medicines = await prismaClient.medicine.findMany({
       where: { userId: user.id },
       orderBy: { id: "asc" },
@@ -22,37 +40,28 @@ export class MedicineService {
     return toMedicineResponseList(medicines)
   }
 
-  static async getAllMedicinesWithReminders(user: UserJWTPayload): Promise<MedicineWithRemindersResponse[]> {
-    const medicines = await prismaClient.medicine.findMany({
-      where: { userId: user.id },
-      include: {
-        reminders: {
-          orderBy: { time: "asc" },
+  static async getMedicineById(user: UserJWTPayload, id: number, includeSchedule: boolean = false): Promise<MedicineResponse | MedicineWithScheduleDetailsResponse> {
+    if (includeSchedule) {
+      const medicine = await prismaClient.medicine.findFirst({
+        where: { id, userId: user.id },
+        include: {
+          schedules: {
+            include: {
+              details: {
+                orderBy: { time: "asc" },
+              },
+            },
+          },
         },
-      },
-      orderBy: { id: "asc" },
-    })
-    return toMedicineWithRemindersResponseList(medicines as any)
-  }
+      })
+      if (!medicine) {
+        throw new ResponseError(404, "Medicine not found!")
+      }
+      return toMedicineWithScheduleDetailsResponse(medicine as any)
+    }
 
-  static async getMedicineById(user: UserJWTPayload, id: number): Promise<MedicineResponse> {
     const medicine = await this.checkMedicineExists(user.id, id)
     return toMedicineResponse(medicine)
-  }
-
-  static async getMedicineByIdWithReminders(user: UserJWTPayload, id: number): Promise<MedicineWithRemindersResponse> {
-    const medicine = await prismaClient.medicine.findFirst({
-      where: { id, userId: user.id },
-      include: {
-        reminders: {
-          orderBy: { time: "asc" },
-        },
-      },
-    })
-    if (!medicine) {
-      throw new ResponseError(404, "Medicine not found!")
-    }
-    return toMedicineWithRemindersResponseList([medicine as any])[0]
   }
 
   static async checkMedicineExists(userId: number, id: number): Promise<Medicine> {
@@ -65,7 +74,8 @@ export class MedicineService {
     return medicine
   }
 
-  static async createMedicine(user: UserJWTPayload, reqData: MedicineCreateUpdateRequest): Promise<string> {
+  // Add Medicine
+  static async addMedicine(user: UserJWTPayload, reqData: MedicineCreateUpdateRequest): Promise<string> {
     const validated = Validation.validate(MedicineValidation.CREATE_UPDATE, reqData)
 
     const dbUser = await prismaClient.user.findUnique({ where: { id: user.id } })
@@ -79,7 +89,6 @@ export class MedicineService {
         name: validated.name,
         type: validated.type,
         dosage: validated.dosage,
-        frequency: validated.frequency,
         stock: validated.stock,
         minStock: validated.minStock,
         notes: validated.notes,
@@ -90,6 +99,7 @@ export class MedicineService {
     return "Medicine has been created successfully!"
   }
 
+  // Update Medicine
   static async updateMedicine(user: UserJWTPayload, id: number, reqData: Partial<MedicineCreateUpdateRequest>): Promise<string> {
     if (!reqData || Object.keys(reqData).length === 0) {
       throw new ResponseError(400, "No fields to update")
@@ -100,7 +110,7 @@ export class MedicineService {
     await this.checkMedicineExists(user.id, id)
 
     const data: any = {}
-    const keys: (keyof MedicineCreateUpdateRequest)[] = ["name","type","dosage","frequency","stock","minStock","notes","image"]
+    const keys: (keyof MedicineCreateUpdateRequest)[] = ["name", "type", "dosage", "stock", "minStock", "notes", "image"]
     for (const k of keys) {
       if ((validated as any)[k] !== undefined) data[k] = (validated as any)[k]
     }
@@ -125,7 +135,7 @@ export class MedicineService {
 
   static async checkLowStock(user: UserJWTPayload): Promise<MedicineResponse[]> {
     const all = await prismaClient.medicine.findMany({ where: { userId: user.id } })
-    const low = all.filter(m => (m.stock ?? 0) <= (m.minStock ?? 0))
+    const low = all.filter((m) => (m.stock ?? 0) <= (m.minStock ?? 0))
     return toMedicineResponseList(low)
   }
 }

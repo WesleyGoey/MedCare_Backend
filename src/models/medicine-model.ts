@@ -1,12 +1,9 @@
-import { Medicine } from "../../generated/prisma"
-import { Reminder } from "../../generated/prisma"
-import { ReminderResponse, toReminderResponseList } from "./reminder-model"
+import { Medicine, Schedule, ScheduleDetail } from "../../generated/prisma"
 
 export interface MedicineCreateUpdateRequest {
   name: string
   type: string
   dosage: string
-  frequency: number
   stock: number
   minStock: number
   notes?: string
@@ -29,7 +26,6 @@ export function toMedicineResponse(prismaMedicine: Medicine): MedicineResponse {
     name: prismaMedicine.name,
     type: prismaMedicine.type,
     dosage: prismaMedicine.dosage,
-    frequency: prismaMedicine.frequency ?? undefined,
     stock: prismaMedicine.stock,
     minStock: prismaMedicine.minStock,
     notes: prismaMedicine.notes ?? undefined,
@@ -37,22 +33,47 @@ export function toMedicineResponse(prismaMedicine: Medicine): MedicineResponse {
   }
 }
 
-export interface MedicineWithRemindersResponse extends MedicineResponse {
-  reminders: ReminderResponse[]
+// Medicine with Schedule Details
+export interface MedicineWithScheduleDetailsResponse extends MedicineResponse {
+  schedules: ScheduleWithDetailsResponse[]
 }
 
-export function toMedicineWithRemindersResponse(
-  prismaMedicine: Medicine & { reminders?: Reminder[] }
-): MedicineWithRemindersResponse {
+export interface ScheduleWithDetailsResponse {
+  id: number
+  scheduleType: string
+  startDate: string
+  details: ScheduleDetailBasicResponse[]
+}
+
+export interface ScheduleDetailBasicResponse {
+  id: number
+  time: string
+  dayOfWeek?: number | null
+  status: string
+}
+
+export function toMedicineWithScheduleDetailsResponse(
+  prismaMedicine: Medicine & { schedules?: (Schedule & { details?: ScheduleDetail[] })[] }
+): MedicineWithScheduleDetailsResponse {
   const base = toMedicineResponse(prismaMedicine)
   return {
     ...base,
-    reminders: toReminderResponseList(prismaMedicine.reminders ?? []),
+    schedules: (prismaMedicine.schedules ?? []).map((s) => ({
+      id: s.id,
+      scheduleType: s.scheduleType,
+      startDate: s.startDate.toISOString(),
+      details: (s.details ?? []).map((d) => ({
+        id: d.id,
+        time: d.time instanceof Date ? d.time.toISOString().substr(11, 5) : String(d.time).substr(0, 5),
+        dayOfWeek: d.dayOfWeek ?? null,
+        status: d.status,
+      })),
+    })),
   }
 }
 
-export function toMedicineWithRemindersResponseList(
-  prismaMedicines: (Medicine & { reminders?: Reminder[] })[]
-): MedicineWithRemindersResponse[] {
-  return prismaMedicines.map((m) => toMedicineWithRemindersResponse(m))
+export function toMedicineWithScheduleDetailsResponseList(
+  prismaMedicines: (Medicine & { schedules?: (Schedule & { details?: ScheduleDetail[] })[] })[]
+): MedicineWithScheduleDetailsResponse[] {
+  return prismaMedicines.map((m) => toMedicineWithScheduleDetailsResponse(m))
 }

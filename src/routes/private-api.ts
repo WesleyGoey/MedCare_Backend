@@ -15,14 +15,13 @@ privateRouter.patch("/profile", UserController.updateProfile)
 privateRouter.get("/settings", SettingsController.getSettings)
 privateRouter.patch("/settings", SettingsController.updateSettings)
 
-privateRouter.get("/medicines", MedicineController.getAllMedicines) // supports ?includeReminders=1
+privateRouter.get("/medicines", MedicineController.getAllMedicines)
 privateRouter.get("/medicines/low-stock", MedicineController.checkLowStock)
-privateRouter.get("/medicines/:medicineId", MedicineController.getMedicineById) // supports ?includeReminders=1
+privateRouter.get("/medicines/:medicineId", MedicineController.getMedicineById)
 privateRouter.post("/medicines", MedicineController.addMedicine)
 privateRouter.patch("/medicines/:medicineId", MedicineController.updateMedicine)
 privateRouter.delete("/medicines/:medicineId", MedicineController.deleteMedicine)
 
-// place schedule-specific routes
 privateRouter.get("/schedules", ScheduleController.getAllScheduleWithDetails)
 privateRouter.get("/schedules/by-date", ScheduleController.getScheduleWithDetailsByDate)
 privateRouter.get("/schedules/:scheduleId", ScheduleController.getScheduleWithDetailsById)
