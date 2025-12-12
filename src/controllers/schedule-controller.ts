@@ -2,7 +2,7 @@ import { NextFunction, Response } from "express"
 import { UserRequest } from "../models/user-request-model"
 import { ScheduleService } from "../services/schedule-service"
 import { ResponseError } from "../error/response-error"
-import { ScheduleCreateRequest, ScheduleDetailUpdateRequest } from "../models/schedule-model"
+import { ScheduleCreateRequest, ScheduleDetailUpdateRequest, ScheduleDetailInput } from "../models/schedule-model"
 
 export class ScheduleController {
   // GET all schedule details (reminders)
@@ -103,6 +103,44 @@ export class ScheduleController {
         throw new ResponseError(400, "Invalid schedule id")
       }
       const message = await ScheduleService.deleteSchedule(req.user!, scheduleId)
+      res.status(200).json({ message })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  // GET schedule (header) with details by schedule id
+  static async getScheduleWithDetailsById(req: UserRequest, res: Response, next: NextFunction) {
+    try {
+      const scheduleId = Number(req.params.scheduleId)
+      if (!Number.isInteger(scheduleId) || scheduleId <= 0) throw new ResponseError(400, "Invalid schedule id")
+      const data = await ScheduleService.getScheduleWithDetailsById(req.user!, scheduleId)
+      res.status(200).json({ data })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  // POST create details for existing schedule
+  static async createDetails(req: UserRequest, res: Response, next: NextFunction) {
+    try {
+      const scheduleId = Number(req.params.scheduleId)
+      if (!Number.isInteger(scheduleId) || scheduleId <= 0) throw new ResponseError(400, "Invalid schedule id")
+      const inputs = req.body as ScheduleDetailInput[]
+      const message = await ScheduleService.createScheduleDetails(req.user!, scheduleId, inputs)
+      res.status(201).json({ message })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  // PATCH update entire schedule with details
+  static async updateSchedule(req: UserRequest, res: Response, next: NextFunction) {
+    try {
+      const scheduleId = Number(req.params.scheduleId)
+      if (!Number.isInteger(scheduleId) || scheduleId <= 0) throw new ResponseError(400, "Invalid schedule id")
+      const reqData = req.body as ScheduleCreateRequest
+      const message = await ScheduleService.updateScheduleWithDetails(req.user!, scheduleId, reqData)
       res.status(200).json({ message })
     } catch (error) {
       next(error)

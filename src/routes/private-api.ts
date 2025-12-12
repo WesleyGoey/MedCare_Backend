@@ -22,10 +22,14 @@ privateRouter.post("/medicines", MedicineController.addMedicine)
 privateRouter.patch("/medicines/:medicineId", MedicineController.updateMedicine)
 privateRouter.delete("/medicines/:medicineId", MedicineController.deleteMedicine)
 
+// place schedule-specific routes
 privateRouter.get("/schedules", ScheduleController.getAll) // all schedule details
 privateRouter.get("/schedules/by-date", ScheduleController.getByDate) // ?date=YYYY-MM-DD
 privateRouter.get("/schedules/details/:detailId", ScheduleController.getDetailById)
+privateRouter.get("/schedules/:scheduleId", ScheduleController.getScheduleWithDetailsById) // get schedule + details
 privateRouter.post("/schedules", ScheduleController.create)
+privateRouter.post("/schedules/:scheduleId/details", ScheduleController.createDetails) // create details for schedule
+privateRouter.patch("/schedules/:scheduleId", ScheduleController.updateSchedule) // update schedule + replace details
 privateRouter.patch("/schedules/details/:detailId", ScheduleController.updateDetail)
 privateRouter.delete("/schedules/details/:detailId", ScheduleController.deleteDetail)
 privateRouter.delete("/schedules/:scheduleId", ScheduleController.deleteSchedule)

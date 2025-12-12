@@ -6,6 +6,7 @@ import {
   ScheduleDetailUpdateRequest,
   ScheduleDetailResponse,
   toScheduleDetailResponseList,
+  ScheduleDetailInput,
 } from "../models/schedule-model"
 import { Validation } from "../validations/validation"
 import { ScheduleValidation } from "../validations/schedule-validation"
@@ -130,5 +131,75 @@ export class ScheduleService {
 
     await prismaClient.schedule.delete({ where: { id: scheduleId } })
     return "Schedule deleted successfully!"
+  }
+
+  // Get schedule (header) with all details by schedule id
+  static async getScheduleWithDetailsById(user: UserJWTPayload, scheduleId: number): Promise<ScheduleDetailResponse[]> {
+    const schedule = await prismaClient.schedule.findFirst({
+      where: { id: scheduleId, medicine: { userId: user.id } },
+      include: { details: true, medicine: true },
+    })
+    if (!schedule) throw new ResponseError(404, "Schedule not found")
+
+    // attach schedule & medicine into each detail for DTO helper
+    const detailsWithSchedule = (schedule.details || []).map((d: any) => ({
+      ...d,
+      schedule: { id: schedule.id, scheduleType: schedule.scheduleType, startDate: schedule.startDate, medicine: schedule.medicine },
+    }))
+
+    return toScheduleDetailResponseList(detailsWithSchedule as any)
+  }
+
+  // Create schedule details (one or many) for existing schedule
+  static async createScheduleDetails(user: UserJWTPayload, scheduleId: number, inputs: ScheduleDetailInput[]): Promise<string> {
+    if (!inputs || inputs.length === 0) throw new ResponseError(400, "No details provided")
+
+    // ensure schedule exists and belongs to user
+    const schedule = await prismaClient.schedule.findFirst({
+      where: { id: scheduleId, medicine: { userId: user.id } },
+      include: { medicine: true },
+    })
+    if (!schedule) throw new ResponseError(404, "Schedule not found")
+
+    const createData = inputs.map((d: any) => ({
+      scheduleId,
+      time: new Date(`1970-01-01T${d.time}:00Z`),
+      dayOfWeek: d.dayOfWeek ?? null,
+    }))
+
+    await prismaClient.scheduleDetail.createMany({ data: createData })
+    return "Schedule details created successfully!"
+  }
+
+  // Update entire schedule with details (replace details if provided)
+  static async updateScheduleWithDetails(user: UserJWTPayload, scheduleId: number, reqData: ScheduleCreateRequest): Promise<string> {
+    const validated = Validation.validate(ScheduleValidation.CREATE, reqData)
+
+    // ensure schedule exists and belongs to user
+    const schedule = await prismaClient.schedule.findFirst({
+      where: { id: scheduleId, medicine: { userId: user.id } },
+    })
+    if (!schedule) throw new ResponseError(404, "Schedule not found")
+
+    // perform transaction: update schedule, delete old details, create new details
+    const detailCreates = validated.details.map((d: any) => ({
+      scheduleId,
+      time: new Date(`1970-01-01T${d.time}:00Z`),
+      dayOfWeek: d.dayOfWeek ?? null,
+    }))
+
+    await prismaClient.$transaction([
+      prismaClient.schedule.update({
+        where: { id: scheduleId },
+        data: {
+          scheduleType: validated.scheduleType,
+          startDate: new Date(validated.startDate),
+        },
+      }),
+      prismaClient.scheduleDetail.deleteMany({ where: { scheduleId } }),
+      prismaClient.scheduleDetail.createMany({ data: detailCreates }),
+    ])
+
+    return "Schedule updated successfully!"
   }
 }
