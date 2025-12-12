@@ -20,7 +20,7 @@ privateRouter.get("/medicines/low-stock", MedicineController.checkLowStock)
 privateRouter.get("/medicines/:medicineId", MedicineController.getMedicineById)
 privateRouter.post("/medicines", MedicineController.addMedicine)
 privateRouter.patch("/medicines/:medicineId", MedicineController.updateMedicine)
-privateRouter.delete("/medicines/:medicineId", MedicineController.deleteMedicine)
+privateRouter.delete("/medicines/:medicineId", MedicineController.deleteMedicine )
 
 privateRouter.get("/schedules", ScheduleController.getAllScheduleWithDetails)
 privateRouter.get("/schedules/by-date", ScheduleController.getScheduleWithDetailsByDate)
