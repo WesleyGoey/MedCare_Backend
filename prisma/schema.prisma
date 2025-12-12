@@ -74,7 +74,7 @@ model ScheduleDetail {
   scheduleId Int
   time       DateTime       @db.Time
   dayOfWeek  Int?           // 0-6 for Sunday-Saturday (WEEKLY), null for DAILY/CUSTOM
-
+  
   schedule  Schedule  @relation(fields: [scheduleId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   histories History[]
 
@@ -84,12 +84,13 @@ model ScheduleDetail {
 
 model History {
   id        Int       @id @default(autoincrement())
-  detailId  Int
+  detailId  Int?      // <-- Foreign Key dijadikan NULLABLE (Int?)
   date      DateTime
   timeTaken DateTime?
-  status    ReminderStatus @default(PENDING)
+  status    ReminderStatus // Status (DONE, MISSED) sekarang disimpan di History
 
-  detail ScheduleDetail @relation(fields: [detailId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  detail ScheduleDetail? @relation(fields: [detailId], references: [id], onDelete: SetNull, onUpdate: Cascade) // <-- DITERAPKAN SetNull
+  // Perhatikan: Karena detailId dijadikan nullable, relasi (detail) juga harus menerima nilai null.
 
   @@index([detailId])
   @@map("history")

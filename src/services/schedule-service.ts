@@ -133,50 +133,6 @@ export class ScheduleService {
     return "Schedule updated successfully!"
   }
 
-  // Update Schedule Details (jam nya)
-  static async updateScheduleDetails(user: UserJWTPayload, detailId: number, reqData: Partial<ScheduleDetailUpdateRequest>): Promise<string> {
-    if (!reqData || Object.keys(reqData).length === 0) {
-      throw new ResponseError(400, "No fields to update")
-    }
-
-    const validated = Validation.validate(ScheduleValidation.UPDATE_DETAIL, reqData)
-
-    const detail = await prismaClient.scheduleDetail.findFirst({
-      where: { id: detailId, schedule: { medicine: { userId: user.id } } },
-    })
-    if (!detail) throw new ResponseError(404, "Schedule detail not found")
-
-    const data: any = {}
-    if (validated.time) data.time = new Date(`1970-01-01T${validated.time}:00Z`)
-    if (validated.dayOfWeek !== undefined) data.dayOfWeek = validated.dayOfWeek
-    // if (validated.status) data.status = validated.status
-
-    await prismaClient.scheduleDetail.update({ where: { id: detailId }, data })
-    return "Schedule detail updated successfully!"
-  }
-
-  // Delete Schedule With Details (keseluruhan)
-  static async deleteScheduleWithDetails(user: UserJWTPayload, scheduleId: number): Promise<string> {
-    const schedule = await prismaClient.schedule.findFirst({
-      where: { id: scheduleId, medicine: { userId: user.id } },
-    })
-    if (!schedule) throw new ResponseError(404, "Schedule not found")
-
-    await prismaClient.schedule.delete({ where: { id: scheduleId } })
-    return "Schedule deleted successfully!"
-  }
-
-  // Delete Schedule Details (jam nya)
-  static async deleteScheduleDetails(user: UserJWTPayload, detailId: number): Promise<string> {
-    const detail = await prismaClient.scheduleDetail.findFirst({
-      where: { id: detailId, schedule: { medicine: { userId: user.id } } },
-    })
-    if (!detail) throw new ResponseError(404, "Schedule detail not found")
-
-    await prismaClient.scheduleDetail.delete({ where: { id: detailId } })
-    return "Schedule detail deleted successfully!"
-  }
-
   // Mark detail as taken
   static async markDetailAsTaken(
     user: UserJWTPayload,
@@ -213,10 +169,10 @@ export class ScheduleService {
           detailId,
           date: dayStart,
           timeTaken,
-          status: "DONE",
+          status: "DONE", // ✅ WRITE status in History
         },
       }),
-      // removed scheduleDetail.status update; status now recorded in history
+      // ❌ REMOVED: scheduleDetail.update (no more status field)
       prismaClient.suppression.deleteMany({
         where: {
           detailId,
@@ -284,12 +240,54 @@ export class ScheduleService {
     })
     if (!lastHist) throw new ResponseError(404, "No history to undo")
 
-    await prismaClient.$transaction([
-      prismaClient.history.delete({ where: { id: lastHist.id } }),
-      // removed scheduleDetail status revert; history deletion is the source of truth
-    ])
+    await prismaClient.history.delete({ where: { id: lastHist.id } })
+    // ❌ REMOVED: scheduleDetail.update (status now tracked in History)
 
     return "Undo successful"
+  }
+
+  // Update Schedule Details (jam nya)
+  static async updateScheduleDetails(user: UserJWTPayload, detailId: number, reqData: Partial<ScheduleDetailUpdateRequest>): Promise<string> {
+    if (!reqData || Object.keys(reqData).length === 0) {
+      throw new ResponseError(400, "No fields to update")
+    }
+
+    const validated = Validation.validate(ScheduleValidation.UPDATE_DETAIL, reqData)
+
+    const detail = await prismaClient.scheduleDetail.findFirst({
+      where: { id: detailId, schedule: { medicine: { userId: user.id } } },
+    })
+    if (!detail) throw new ResponseError(404, "Schedule detail not found")
+
+    const data: any = {}
+    if (validated.time) data.time = new Date(`1970-01-01T${validated.time}:00Z`)
+    if (validated.dayOfWeek !== undefined) data.dayOfWeek = validated.dayOfWeek
+    // ❌ REMOVED: status update (no longer exists on ScheduleDetail)
+
+    await prismaClient.scheduleDetail.update({ where: { id: detailId }, data })
+    return "Schedule detail updated successfully!"
+  }
+
+  // Delete Schedule With Details (keseluruhan)
+  static async deleteScheduleWithDetails(user: UserJWTPayload, scheduleId: number): Promise<string> {
+    const schedule = await prismaClient.schedule.findFirst({
+      where: { id: scheduleId, medicine: { userId: user.id } },
+    })
+    if (!schedule) throw new ResponseError(404, "Schedule not found")
+
+    await prismaClient.schedule.delete({ where: { id: scheduleId } })
+    return "Schedule deleted successfully!"
+  }
+
+  // Delete Schedule Details (jam nya)
+  static async deleteScheduleDetails(user: UserJWTPayload, detailId: number): Promise<string> {
+    const detail = await prismaClient.scheduleDetail.findFirst({
+      where: { id: detailId, schedule: { medicine: { userId: user.id } } },
+    })
+    if (!detail) throw new ResponseError(404, "Schedule detail not found")
+
+    await prismaClient.scheduleDetail.delete({ where: { id: detailId } })
+    return "Schedule detail deleted successfully!"
   }
 
   // Check if suppressed (for alarm dispatcher)

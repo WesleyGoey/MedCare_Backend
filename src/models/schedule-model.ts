@@ -17,7 +17,7 @@ export interface ScheduleDetailInput {
 export interface ScheduleDetailUpdateRequest {
   time?: string // "HH:mm"
   dayOfWeek?: number
-  status?: "PENDING" | "DONE" | "MISSED"
+  // REMOVED: status field (now in History)
 }
 
 // response for schedule detail (used as reminder in UI)
@@ -26,6 +26,7 @@ export interface ScheduleDetailResponse {
   scheduleId: number
   time: string // "HH:mm" formatted
   dayOfWeek?: number | null
+  // REMOVED: status field
   medicine: {
     id: number
     name: string
@@ -49,6 +50,7 @@ export function toScheduleDetailResponse(
     scheduleId: d.scheduleId,
     time: timeStr,
     dayOfWeek: d.dayOfWeek ?? null,
+    // REMOVED: status
     medicine: {
       id: (d.schedule as any)?.medicine?.id ?? 0,
       name: (d.schedule as any)?.medicine?.name ?? "",

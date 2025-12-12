@@ -64,10 +64,10 @@ CREATE TABLE "schedule_details" (
 -- CreateTable
 CREATE TABLE "history" (
     "id" SERIAL NOT NULL,
-    "detailId" INTEGER NOT NULL,
+    "detailId" INTEGER,
     "date" TIMESTAMP(3) NOT NULL,
     "timeTaken" TIMESTAMP(3),
-    "status" "ReminderStatus" NOT NULL DEFAULT 'PENDING',
+    "status" "ReminderStatus" NOT NULL,
 
     CONSTRAINT "history_pkey" PRIMARY KEY ("id")
 );
@@ -106,4 +106,4 @@ ALTER TABLE "schedules" ADD CONSTRAINT "schedules_medicineId_fkey" FOREIGN KEY (
 ALTER TABLE "schedule_details" ADD CONSTRAINT "schedule_details_scheduleId_fkey" FOREIGN KEY ("scheduleId") REFERENCES "schedules"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "history" ADD CONSTRAINT "history_detailId_fkey" FOREIGN KEY ("detailId") REFERENCES "schedule_details"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "history" ADD CONSTRAINT "history_detailId_fkey" FOREIGN KEY ("detailId") REFERENCES "schedule_details"("id") ON DELETE SET NULL ON UPDATE CASCADE;

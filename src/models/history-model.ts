@@ -4,9 +4,9 @@ export type HistoryResponse = {
     id: number;
     medicineName: string;
     scheduledDate: Date;
-    scheduledTime: Date; // Ambil dari detail.time
+    scheduledTime: Date;
     timeTaken: Date | null;
-    status: "PENDING" | "DONE" | "MISSED";
+    status: "PENDING" | "DONE" | "MISSED"; // ✅ status should be here
 }
 
 export type ComplianceResponse = {
@@ -26,16 +26,13 @@ type HistoryWithRelations = History & {
 }
 
 export function toHistoryResponse(history: any): HistoryResponse {
-    // Casting ke any dulu atau gunakan type HistoryWithRelations jika ingin strict
     const h = history as HistoryWithRelations;
-    
     return {
         id: h.id,
-        // Navigasi: detail -> schedule -> medicine -> name
         medicineName: h.detail?.schedule?.medicine?.name || "Unknown Medicine",
         scheduledDate: h.date,
-        scheduledTime: h.detail?.time, 
+        scheduledTime: h.detail?.time,
         timeTaken: h.timeTaken,
-        status: (h as any).status ?? (h.timeTaken ? "DONE" : "MISSED")
+        status: (h as any).status ?? (h.timeTaken ? "DONE" : "MISSED") // ✅ use history.status
     }
 }

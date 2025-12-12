@@ -91,7 +91,6 @@ export class HistoryService {
     static async getMissedCount(user: UserJWTPayload): Promise<number> {
         return await prismaClient.history.count({
             where: {
-                // Query gabungan manual karena keterbatasan spread operator pada nested object typescript
                 detail: {
                     schedule: {
                         medicine: {
@@ -99,33 +98,31 @@ export class HistoryService {
                         }
                     }
                 },
-                timeTaken: null // Null berarti missed
+                status: "MISSED" // ✅ USE history.status instead of timeTaken null
             }
         });
     }
 
     static async getComplianceRate(user: UserJWTPayload): Promise<ComplianceResponse> {
-        // Hitung Total (Semua history milik user ini)
         const total = await prismaClient.history.count({
             where: this.getBaseQuery(user.id)
         });
 
-        // Hitung Completed (timeTaken TIDAK null)
+        // ✅ USE history.status for completed
         const completed = await prismaClient.history.count({
             where: {
-                detail: {
-                    schedule: {
-                        medicine: {
-                            userId: user.id
-                        }
-                    }
-                },
-                timeTaken: { not: null }
+                ...this.getBaseQuery(user.id),
+                status: "DONE"
             }
         });
 
-        const missed = total - completed;
-        
+        const missed = await prismaClient.history.count({
+            where: {
+                ...this.getBaseQuery(user.id),
+                status: "MISSED"
+            }
+        });
+
         const complianceRate = total > 0 ? (completed / total) * 100 : 0;
 
         return {
