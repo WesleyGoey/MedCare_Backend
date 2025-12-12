@@ -4,6 +4,8 @@ import { MedicineController } from "../controllers/medicine-controller"
 import { SettingsController } from "../controllers/setting-controller"
 import { UserController } from "../controllers/user-controller"
 import { ScheduleController } from "../controllers/schedule-controller"
+import { HistoryController } from "../controllers/history-controller"
+import { StockController } from "../controllers/stock-controller"
 
 export const privateRouter = express.Router()
 
@@ -35,3 +37,11 @@ privateRouter.delete("/schedules/details/:detailId", ScheduleController.deleteSc
 privateRouter.post("/schedules/details/:detailId/mark-taken", ScheduleController.markAsTaken)
 privateRouter.post("/schedules/details/:detailId/skip", ScheduleController.skip)
 privateRouter.post("/schedules/details/:detailId/undo-taken", ScheduleController.undoMarkAsTaken)
+
+privateRouter.get("/history", HistoryController.getAll)
+privateRouter.get("/history/weekly", HistoryController.getWeekly)
+privateRouter.get("/history/recent", HistoryController.getRecent)
+privateRouter.get("/history/stats", HistoryController.getStats)
+
+privateRouter.get("/stock/alerts", StockController.getLowStockAlerts)
+
