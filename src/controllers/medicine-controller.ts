@@ -5,10 +5,8 @@ import { MedicineCreateUpdateRequest } from "../models/medicine-model"
 import { ResponseError } from "../error/response-error"
 
 export class MedicineController {
-  // Get All Medicine (include schedule with details)
   static async getAllMedicines(req: UserRequest, res: Response, next: NextFunction) {
     try {
-      // Support query param: ?includeSchedule=1 to include schedules with details
       const includeSchedule = String(req.query.includeSchedule ?? "").toLowerCase() === "1" || String(req.query.includeSchedule ?? "").toLowerCase() === "true"
       const data = await MedicineService.getAllMedicines(req.user!, includeSchedule)
       res.status(200).json({ data })
@@ -17,7 +15,6 @@ export class MedicineController {
     }
   }
 
-  // Check Low Stock
   static async checkLowStock(req: UserRequest, res: Response, next: NextFunction) {
     try {
       const data = await MedicineService.checkLowStock(req.user!)
@@ -27,14 +24,12 @@ export class MedicineController {
     }
   }
 
-  // Get Medicine By Id (include schedule with details)
   static async getMedicineById(req: UserRequest, res: Response, next: NextFunction) {
     try {
       const id = Number(req.params.medicineId)
       if (!Number.isInteger(id) || id <= 0) {
         throw new ResponseError(400, "Invalid medicine id")
       }
-      // Support query param: ?includeSchedule=1 to include schedules with details
       const includeSchedule = String(req.query.includeSchedule ?? "").toLowerCase() === "1" || String(req.query.includeSchedule ?? "").toLowerCase() === "true"
       const data = await MedicineService.getMedicineById(req.user!, id, includeSchedule)
       res.status(200).json({ data })
@@ -43,7 +38,6 @@ export class MedicineController {
     }
   }
 
-  // Add Medicine
   static async addMedicine(req: UserRequest, res: Response, next: NextFunction) {
     try {
       const reqData = req.body as MedicineCreateUpdateRequest
@@ -54,7 +48,6 @@ export class MedicineController {
     }
   }
 
-  // Update Medicine
   static async updateMedicine(req: UserRequest, res: Response, next: NextFunction) {
     try {
       const id = Number(req.params.medicineId)
@@ -69,7 +62,6 @@ export class MedicineController {
     }
   }
 
-  // Delete Medicine
   static async deleteMedicine(req: UserRequest, res: Response, next: NextFunction) {
     try {
       const id = Number(req.params.medicineId)

@@ -35,8 +35,7 @@ export class UserController {
             next(error)
         }
     }
-
-    // --- added: get profile ---
+    
     static async getProfile(req: UserRequest, res: Response, next: NextFunction) {
         try {
             const data: UserProfileResponse = await UserService.getProfile(req.user!)
@@ -46,12 +45,26 @@ export class UserController {
         }
     }
 
-    // --- added: update profile ---
     static async updateProfile(req: UserRequest, res: Response, next: NextFunction) {
         try {
             const reqData = req.body as Partial<UserUpdateRequest>
             const message = await UserService.updateProfile(req.user!, reqData)
             res.status(200).json({ message })
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    static async logout(req: UserRequest, res: Response, next: NextFunction) {
+        try {
+            const authHeader = String(req.headers["authorization"] ?? "")
+            const token = authHeader.split(" ")[1]
+            try {
+                const { TokenBlacklist } = require("../utils/token-blacklist")
+                if (token) TokenBlacklist.add(token)
+            } catch (_) {}
+
+            res.status(200).json({ message: "Logged out. Remove token on client." })
         } catch (error) {
             next(error)
         }

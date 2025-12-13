@@ -13,6 +13,7 @@ privateRouter.use(authMiddleware)
 
 privateRouter.get("/profile", UserController.getProfile)
 privateRouter.patch("/profile", UserController.updateProfile)
+privateRouter.post("/logout", UserController.logout)
 
 privateRouter.get("/settings", SettingsController.getSettings)
 privateRouter.patch("/settings", SettingsController.updateSettings)

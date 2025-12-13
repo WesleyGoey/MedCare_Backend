@@ -42,7 +42,6 @@ export function toUserResponse(
     }
 }
 
-// --- added for profile ---
 export interface UserProfileResponse {
     id: number
     name: string
