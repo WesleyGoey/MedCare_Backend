@@ -133,6 +133,35 @@ export class ScheduleService {
     return "Schedule updated successfully!"
   }
 
+  // Update Schedule Details (jam nya)
+  static async updateScheduleDetails(
+    user: UserJWTPayload,
+    detailId: number,
+    reqData: Partial<ScheduleDetailUpdateRequest>
+  ): Promise<string> {
+    const validated = Validation.validate((ScheduleValidation.UPDATE_DETAIL as any).partial(), reqData)
+
+    const detail = await prismaClient.scheduleDetail.findFirst({
+      where: { id: detailId, schedule: { medicine: { userId: user.id } } },
+    })
+    if (!detail) throw new ResponseError(404, "Schedule detail not found")
+
+    const data: any = {}
+    if ((validated as any).time !== undefined) {
+      data.time = new Date(`1970-01-01T${(validated as any).time}:00Z`)
+    }
+    if ((validated as any).dayOfWeek !== undefined) {
+      data.dayOfWeek = (validated as any).dayOfWeek
+    }
+
+    if (Object.keys(data).length === 0) {
+      throw new ResponseError(400, "No valid fields provided to update")
+    }
+
+    await prismaClient.scheduleDetail.update({ where: { id: detailId }, data })
+    return "Schedule detail updated successfully!"
+  }
+
   // Delete Schedule With Details (keseluruhan)
   static async deleteScheduleWithDetails(user: UserJWTPayload, scheduleId: number): Promise<string> {
     const schedule = await prismaClient.schedule.findFirst({
