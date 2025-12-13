@@ -23,6 +23,7 @@ model User {
   settings  Settings @relation(name: "UserSettings", fields: [settingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   medicines Medicine[]
+  suppressions Suppression[]
 
   @@index([settingId])
   @@map("users")
@@ -73,10 +74,11 @@ model ScheduleDetail {
   id         Int            @id @default(autoincrement())
   scheduleId Int
   time       DateTime       @db.Time
-  dayOfWeek  Int?           // 0-6 for Sunday-Saturday (WEEKLY), null for DAILY/CUSTOM
+  dayOfWeek  Int?
   
   schedule  Schedule  @relation(fields: [scheduleId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   histories History[]
+  suppressions Suppression[]
 
   @@index([scheduleId])
   @@map("schedule_details")
@@ -84,16 +86,30 @@ model ScheduleDetail {
 
 model History {
   id        Int       @id @default(autoincrement())
-  detailId  Int?      // <-- Foreign Key dijadikan NULLABLE (Int?)
+  detailId  Int?      
   date      DateTime
   timeTaken DateTime?
-  status    ReminderStatus // Status (DONE, MISSED) sekarang disimpan di History
+  status    ReminderStatus
 
-  detail ScheduleDetail? @relation(fields: [detailId], references: [id], onDelete: SetNull, onUpdate: Cascade) // <-- DITERAPKAN SetNull
-  // Perhatikan: Karena detailId dijadikan nullable, relasi (detail) juga harus menerima nilai null.
+  detail ScheduleDetail? @relation(fields: [detailId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@index([detailId])
   @@map("history")
+}
+
+model Suppression {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  detailId  Int
+  date      DateTime
+  expiresAt DateTime
+
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  detail ScheduleDetail @relation(fields: [detailId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([userId])
+  @@index([detailId])
+  @@map("suppression")
 }
 
 enum ScheduleType {
