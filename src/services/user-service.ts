@@ -1,5 +1,6 @@
 import { ResponseError } from "../error/response-error"
 import {
+    UserJWTPayload,
     LoginUserRequest,
     RegisterUserRequest,
     toUserResponse,
