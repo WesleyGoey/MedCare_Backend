@@ -1,5 +1,5 @@
 import { prismaClient } from "../utils/database-util";
-import { ComplianceResponse, toHistoryResponse } from "../models/history-model";
+import { toHistoryResponse } from "../models/history-model";
 import { UserJWTPayload } from "../models/user-model";
 import { Prisma } from "../../generated/prisma";
 
@@ -50,7 +50,8 @@ export class HistoryService {
         return histories.map(toHistoryResponse);
     }
 
-    static async getWeeklyComplianceStatsTotal(user: UserJWTPayload): Promise<ComplianceResponse> {
+    // Return only compliance rate (number)
+    static async getWeeklyComplianceStatsTotal(user: UserJWTPayload): Promise<number> {
         const { startOfWeek, endOfWeek } = this.getWeekRange();
 
         const weekFilter: Prisma.HistoryWhereInput = {
@@ -61,32 +62,11 @@ export class HistoryService {
             }
         };
 
-        const total = await prismaClient.history.count({
-            where: weekFilter
-        });
-
-        const completed = await prismaClient.history.count({
-            where: {
-                ...weekFilter,
-                status: "DONE"
-            }
-        });
-
-        const missed = await prismaClient.history.count({
-            where: {
-                ...weekFilter,
-                status: "MISSED"
-            }
-        });
-
-        const complianceRate = total > 0 ? (completed / total) * 100 : 0;
-
-        return {
-            total,
-            completed,
-            missed,
-            complianceRate: Math.round(complianceRate * 100) / 100
-        };
+        const total = await prismaClient.history.count({ where: weekFilter });
+        if (total === 0) return 0;
+        const completed = await prismaClient.history.count({ where: { ...weekFilter, status: "DONE" } });
+        const complianceRate = (completed / total) * 100;
+        return Math.round(complianceRate * 100) / 100;
     }
 
     static async getWeeklyMissedDose(user: UserJWTPayload): Promise<number> {

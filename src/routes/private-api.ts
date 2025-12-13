@@ -40,9 +40,9 @@ privateRouter.post("/schedules/details/:detailId/skip", ScheduleController.skip)
 privateRouter.post("/schedules/details/:detailId/undo-taken", ScheduleController.undoMarkAsTaken)
 
 privateRouter.get("/history", HistoryController.getAllHistory)
-privateRouter.get("/history/weekly", HistoryController.getWeeklyComplianceStatsTotal)
+privateRouter.get("/history/compliance", HistoryController.getWeeklyComplianceStatsTotal)
 privateRouter.get("/history/missed", HistoryController.getWeeklyMissedDose)
-privateRouter.get("/history/stats", HistoryController.getWeeklyComplianceStats)
+privateRouter.get("/history/weekly-stats", HistoryController.getWeeklyComplianceStats)
 privateRouter.get("/history/recent", HistoryController.getRecentActivity)
 
 privateRouter.get("/stock/alerts", StockController.getLowStockAlerts)
