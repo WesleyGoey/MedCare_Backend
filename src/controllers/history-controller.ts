@@ -4,45 +4,51 @@ import { UserRequest } from "../models/user-request-model"
 
 export class HistoryController {
 
-    static async getAll(req: UserRequest, res: Response, next: NextFunction) {
+    // 1. Get All History
+    static async getAllHistory(req: UserRequest, res: Response, next: NextFunction) {
         try {
-            const response = await HistoryService.getAll(req.user!);
+            const response = await HistoryService.getAllHistory(req.user!);
             res.status(200).json({ data: response });
         } catch (e) {
             next(e);
         }
     }
 
-    static async getWeekly(req: UserRequest, res: Response, next: NextFunction) {
+    // 2. Get Weekly Compliance Stats Total (Top Left Figma - Rate, Total, etc)
+    static async getWeeklyComplianceStatsTotal(req: UserRequest, res: Response, next: NextFunction) {
         try {
-            const response = await HistoryService.getWeekly(req.user!);
+            const response = await HistoryService.getWeeklyComplianceStatsTotal(req.user!);
             res.status(200).json({ data: response });
         } catch (e) {
             next(e);
         }
     }
 
-    static async getRecent(req: UserRequest, res: Response, next: NextFunction) {
+    // 3. Get Weekly Missed Dose Count
+    static async getWeeklyMissedDose(req: UserRequest, res: Response, next: NextFunction) {
         try {
-            const response = await HistoryService.getRecent(req.user!);
+            const response = await HistoryService.getWeeklyMissedDose(req.user!);
             res.status(200).json({ data: response });
         } catch (e) {
             next(e);
         }
     }
 
-    static async getStats(req: UserRequest, res: Response, next: NextFunction) {
+    // 4. Get Weekly Compliance Stats (The Array/List for the Table)
+    static async getWeeklyComplianceStats(req: UserRequest, res: Response, next: NextFunction) {
         try {
-            const compliance = await HistoryService.getComplianceRate(req.user!);
-            // missedCount sudah termasuk di dalam compliance object, tapi jika butuh endpoint terpisah:
-            // const missed = await HistoryService.getMissedCount(req.user!);
-            
-            res.status(200).json({
-                data: {
-                    compliance,
-                    // missedCount: compliance.missed 
-                }
-            });
+            const response = await HistoryService.getWeeklyComplianceStats(req.user!);
+            res.status(200).json({ data: response });
+        } catch (e) {
+            next(e);
+        }
+    }
+
+    // 5. Get Recent Activity
+    static async getRecentActivity(req: UserRequest, res: Response, next: NextFunction) {
+        try {
+            const response = await HistoryService.getRecentActivity(req.user!);
+            res.status(200).json({ data: response });
         } catch (e) {
             next(e);
         }

@@ -23,7 +23,7 @@ privateRouter.get("/medicines/low-stock", MedicineController.checkLowStock)
 privateRouter.get("/medicines/:medicineId", MedicineController.getMedicineById)
 privateRouter.post("/medicines", MedicineController.addMedicine)
 privateRouter.patch("/medicines/:medicineId", MedicineController.updateMedicine)
-privateRouter.delete("/medicines/:medicineId", MedicineController.deleteMedicine )
+privateRouter.delete("/medicines/:medicineId", MedicineController.deleteMedicine)
 
 privateRouter.get("/schedules", ScheduleController.getAllScheduleWithDetails)
 privateRouter.get("/schedules/by-date", ScheduleController.getScheduleWithDetailsByDate)
@@ -39,10 +39,11 @@ privateRouter.post("/schedules/details/:detailId/mark-taken", ScheduleController
 privateRouter.post("/schedules/details/:detailId/skip", ScheduleController.skip)
 privateRouter.post("/schedules/details/:detailId/undo-taken", ScheduleController.undoMarkAsTaken)
 
-privateRouter.get("/history", HistoryController.getAll)
-privateRouter.get("/history/weekly", HistoryController.getWeekly)
-privateRouter.get("/history/recent", HistoryController.getRecent)
-privateRouter.get("/history/stats", HistoryController.getStats)
+privateRouter.get("/history", HistoryController.getAllHistory)
+privateRouter.get("/history/weekly", HistoryController.getWeeklyComplianceStatsTotal)
+privateRouter.get("/history/missed", HistoryController.getWeeklyMissedDose)
+privateRouter.get("/history/stats", HistoryController.getWeeklyComplianceStats)
+privateRouter.get("/history/recent", HistoryController.getRecentActivity)
 
 privateRouter.get("/stock/alerts", StockController.getLowStockAlerts)
 

@@ -1,12 +1,10 @@
-import { prismaClient } from "../utils/database-util"
+import { prismaClient } from "../utils/database-util";
 import { ComplianceResponse, toHistoryResponse } from "../models/history-model";
 import { UserJWTPayload } from "../models/user-model";
 import { Prisma } from "../../generated/prisma";
 
 export class HistoryService {
 
-    // Helper query object agar tidak berulang
-    // Mengambil history berdasarkan User yang sedang login
     private static getBaseQuery(userId: number): Prisma.HistoryWhereInput {
         return {
             detail: {
@@ -19,7 +17,21 @@ export class HistoryService {
         };
     }
 
-    static async getAll(user: UserJWTPayload) {
+    private static getWeekRange() {
+        const today = new Date();
+        
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - today.getDay()); // Set to Sunday
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        const endOfWeek = new Date(today);
+        endOfWeek.setDate(today.getDate() - today.getDay() + 6); // Set to Saturday
+        endOfWeek.setHours(23, 59, 59, 999);
+
+        return { startOfWeek, endOfWeek };
+    }
+
+    static async getAllHistory(user: UserJWTPayload) {
         const histories = await prismaClient.history.findMany({
             where: this.getBaseQuery(user.id),
             include: {
@@ -27,7 +39,7 @@ export class HistoryService {
                     include: {
                         schedule: {
                             include: {
-                                medicine: true // Kita butuh ini untuk nama obat
+                                medicine: true
                             }
                         }
                     }
@@ -38,19 +50,66 @@ export class HistoryService {
         return histories.map(toHistoryResponse);
     }
 
-    static async getWeekly(user: UserJWTPayload) {
-        const today = new Date();
-        const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - today.getDay()); // Set ke hari Minggu
-        startOfWeek.setHours(0, 0, 0, 0);
+    static async getWeeklyComplianceStatsTotal(user: UserJWTPayload): Promise<ComplianceResponse> {
+        const { startOfWeek, endOfWeek } = this.getWeekRange();
 
-        const endOfWeek = new Date(today);
-        endOfWeek.setDate(today.getDate() - today.getDay() + 6); // Set ke hari Sabtu
-        endOfWeek.setHours(23, 59, 59, 999);
+        const weekFilter: Prisma.HistoryWhereInput = {
+            ...this.getBaseQuery(user.id),
+            date: {
+                gte: startOfWeek,
+                lte: endOfWeek
+            }
+        };
+
+        const total = await prismaClient.history.count({
+            where: weekFilter
+        });
+
+        const completed = await prismaClient.history.count({
+            where: {
+                ...weekFilter,
+                status: "DONE"
+            }
+        });
+
+        const missed = await prismaClient.history.count({
+            where: {
+                ...weekFilter,
+                status: "MISSED"
+            }
+        });
+
+        const complianceRate = total > 0 ? (completed / total) * 100 : 0;
+
+        return {
+            total,
+            completed,
+            missed,
+            complianceRate: Math.round(complianceRate * 100) / 100
+        };
+    }
+
+    static async getWeeklyMissedDose(user: UserJWTPayload): Promise<number> {
+        const { startOfWeek, endOfWeek } = this.getWeekRange();
+
+        return await prismaClient.history.count({
+            where: {
+                ...this.getBaseQuery(user.id),
+                date: {
+                    gte: startOfWeek,
+                    lte: endOfWeek
+                },
+                status: "MISSED"
+            }
+        });
+    }
+
+    static async getWeeklyComplianceStats(user: UserJWTPayload) {
+        const { startOfWeek, endOfWeek } = this.getWeekRange();
 
         const histories = await prismaClient.history.findMany({
             where: {
-                ...this.getBaseQuery(user.id), // Spread query dasar
+                ...this.getBaseQuery(user.id),
                 date: {
                     gte: startOfWeek,
                     lte: endOfWeek
@@ -67,10 +126,11 @@ export class HistoryService {
             },
             orderBy: { date: 'asc' }
         });
+        
         return histories.map(toHistoryResponse);
     }
 
-    static async getRecent(user: UserJWTPayload) {
+    static async getRecentActivity(user: UserJWTPayload) {
         const histories = await prismaClient.history.findMany({
             where: this.getBaseQuery(user.id),
             take: 5,
@@ -86,50 +146,5 @@ export class HistoryService {
             }
         });
         return histories.map(toHistoryResponse);
-    }
-
-    static async getMissedCount(user: UserJWTPayload): Promise<number> {
-        return await prismaClient.history.count({
-            where: {
-                detail: {
-                    schedule: {
-                        medicine: {
-                            userId: user.id
-                        }
-                    }
-                },
-                status: "MISSED" // ✅ USE history.status instead of timeTaken null
-            }
-        });
-    }
-
-    static async getComplianceRate(user: UserJWTPayload): Promise<ComplianceResponse> {
-        const total = await prismaClient.history.count({
-            where: this.getBaseQuery(user.id)
-        });
-
-        // ✅ USE history.status for completed
-        const completed = await prismaClient.history.count({
-            where: {
-                ...this.getBaseQuery(user.id),
-                status: "DONE"
-            }
-        });
-
-        const missed = await prismaClient.history.count({
-            where: {
-                ...this.getBaseQuery(user.id),
-                status: "MISSED"
-            }
-        });
-
-        const complianceRate = total > 0 ? (completed / total) * 100 : 0;
-
-        return {
-            total,
-            completed,
-            missed,
-            complianceRate: Math.round(complianceRate * 100) / 100
-        };
     }
 }
