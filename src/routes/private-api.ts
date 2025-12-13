@@ -33,7 +33,7 @@ privateRouter.post("/schedules/:scheduleId/details", ScheduleController.createSc
 privateRouter.patch("/schedules/:scheduleId", ScheduleController.updateScheduleWithDetails) //keseluruhan
 privateRouter.patch("/schedules/details/:detailId", ScheduleController.updateScheduleDetails) //jam
 privateRouter.delete("/schedules/:scheduleId", ScheduleController.deleteScheduleWithDetails) //keseluruhan
-privateRouter.delete("/schedules/details/:detailId", ScheduleController.deleteScheduleDetails) //jamnya
+privateRouter.delete("/schedules/details/:detailId", ScheduleController.deleteScheduleDetails) //jam
 
 privateRouter.post("/schedules/details/:detailId/mark-taken", ScheduleController.markAsTaken)
 privateRouter.post("/schedules/details/:detailId/skip", ScheduleController.skip)
