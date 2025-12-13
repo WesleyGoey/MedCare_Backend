@@ -29,9 +29,9 @@ privateRouter.get("/schedules", ScheduleController.getAllScheduleWithDetails)
 privateRouter.get("/schedules/by-date", ScheduleController.getScheduleWithDetailsByDate)
 privateRouter.get("/schedules/:scheduleId", ScheduleController.getScheduleWithDetailsById)
 privateRouter.post("/schedules", ScheduleController.createScheduleWithDetails) //keseluruhan
-privateRouter.post("/schedules/:scheduleId/details", ScheduleController.createScheduleDetails) //jamnya
+privateRouter.post("/schedules/:scheduleId/details", ScheduleController.createScheduleDetails) //jam
 privateRouter.patch("/schedules/:scheduleId", ScheduleController.updateScheduleWithDetails) //keseluruhan
-privateRouter.patch("/schedules/details/:detailId", ScheduleController.updateScheduleDetails) //jamnya
+privateRouter.patch("/schedules/details/:detailId", ScheduleController.updateScheduleDetails) //jam
 privateRouter.delete("/schedules/:scheduleId", ScheduleController.deleteScheduleWithDetails) //keseluruhan
 privateRouter.delete("/schedules/details/:detailId", ScheduleController.deleteScheduleDetails) //jamnya
 
