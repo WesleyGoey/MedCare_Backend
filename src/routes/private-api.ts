@@ -35,9 +35,9 @@ privateRouter.patch("/schedules/details/:detailId", ScheduleController.updateSch
 privateRouter.delete("/schedules/:scheduleId", ScheduleController.deleteScheduleWithDetails) //keseluruhan
 privateRouter.delete("/schedules/details/:detailId", ScheduleController.deleteScheduleDetails) //jam
 
-privateRouter.post("/schedules/details/:detailId/mark-taken", ScheduleController.markAsTaken)
-privateRouter.post("/schedules/details/:detailId/skip", ScheduleController.skip)
-privateRouter.post("/schedules/details/:detailId/undo-taken", ScheduleController.undoMarkAsTaken)
+privateRouter.post("/schedules/details/:detailId/mark-taken", HistoryController.markAsTaken)
+privateRouter.post("/schedules/details/:detailId/skip", HistoryController.skipOccurrence)
+privateRouter.post("/schedules/details/:detailId/undo-taken", HistoryController.undoMarkAsTaken)
 
 privateRouter.get("/history", HistoryController.getAllHistory)
 privateRouter.get("/history/compliance", HistoryController.getWeeklyComplianceStatsTotal)
@@ -45,5 +45,5 @@ privateRouter.get("/history/missed", HistoryController.getWeeklyMissedDose)
 privateRouter.get("/history/weekly-stats", HistoryController.getWeeklyComplianceStats)
 privateRouter.get("/history/recent", HistoryController.getRecentActivity)
 
-privateRouter.get("/stock/alerts", StockController.getLowStockAlerts)//
+privateRouter.get("/stock/alerts", StockController.getLowStockAlerts)
 
