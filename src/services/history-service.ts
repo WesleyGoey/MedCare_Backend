@@ -167,7 +167,7 @@ export class HistoryService {
       return "Marked as taken"
   }
 
-  // Skip detail (create MISSED history entry)
+  // Skip / suppress a single occurrence
   static async skipDetail(
       user: UserJWTPayload,
       detailId: number,
@@ -211,9 +211,13 @@ export class HistoryService {
       const dayStart = new Date(date)
       dayStart.setHours(0, 0, 0, 0)
 
+      // set occurrence back to PENDING (keep record for auditing)
       const hist = await prismaClient.history.findFirst({ where: { detailId, date: dayStart } })
       if (!hist) throw new ResponseError(404, "No history to undo")
-      await prismaClient.history.delete({ where: { id: hist.id } })
+      await prismaClient.history.update({
+        where: { id: hist.id },
+        data: { status: "PENDING", timeTaken: null },
+      })
 
       return "Undo successful"
   }

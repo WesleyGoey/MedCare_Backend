@@ -35,9 +35,9 @@ privateRouter.patch("/schedules/details/:detailId", ScheduleController.updateSch
 privateRouter.delete("/schedules/:scheduleId", ScheduleController.deleteScheduleWithDetails) //keseluruhan
 privateRouter.delete("/schedules/details/:detailId", ScheduleController.deleteScheduleDetails) //jam
 
-privateRouter.post("/history/details/:detailId/mark-taken", HistoryController.markAsTaken)
+privateRouter.patch("/history/details/:detailId/mark-taken", HistoryController.markAsTaken)
 privateRouter.post("/history/details/:detailId/skip", HistoryController.skipOccurrence)
-privateRouter.post("/history/details/:detailId/undo-taken", HistoryController.undoMarkAsTaken)
+privateRouter.patch("/history/details/:detailId/undo-taken", HistoryController.undoMarkAsTaken)
 
 privateRouter.get("/history", HistoryController.getAllHistory)
 privateRouter.get("/history/compliance", HistoryController.getWeeklyComplianceStatsTotal)
