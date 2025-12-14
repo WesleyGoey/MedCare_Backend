@@ -211,12 +211,25 @@ export class HistoryService {
       const dayStart = new Date(date)
       dayStart.setHours(0, 0, 0, 0)
 
-      // set occurrence back to PENDING (keep record for auditing)
+      // find history record for occurrence
       const hist = await prismaClient.history.findFirst({ where: { detailId, date: dayStart } })
       if (!hist) throw new ResponseError(404, "No history to undo")
+
+      // Build occurrence timestamp in UTC using the UTC date from history + UTC time from detail.time
+      const scheduledTime = detail.time as Date
+      const yearUTC = hist.date.getUTCFullYear()
+      const monthUTC = hist.date.getUTCMonth()
+      const dayUTC = hist.date.getUTCDate()
+      const hoursUTC = scheduledTime.getUTCHours()
+      const minutesUTC = scheduledTime.getUTCMinutes()
+      const occurrenceMillisUTC = Date.UTC(yearUTC, monthUTC, dayUTC, hoursUTC, minutesUTC, 0)
+
+      const nowMillis = Date.now()
+      const newStatus: "MISSED" | "PENDING" = nowMillis > occurrenceMillisUTC ? "MISSED" : "PENDING"
+
       await prismaClient.history.update({
         where: { id: hist.id },
-        data: { status: "PENDING", timeTaken: null },
+        data: { status: newStatus, timeTaken: null },
       })
 
       return "Undo successful"
