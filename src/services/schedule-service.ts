@@ -188,9 +188,10 @@ export class ScheduleService {
   static async isSuppressed(userId: number, detailId: number, date: Date): Promise<boolean> {
     const dayStart = new Date(date)
     dayStart.setHours(0, 0, 0, 0)
-    const sup = await prismaClient.suppression.findFirst({
-      where: { detailId, userId, date: dayStart, expiresAt: { gt: new Date() } },
+    // occurrence is "suppressed" if there's a MISSED history record for that detail+date
+    const missed = await prismaClient.history.findFirst({
+      where: { detailId, date: dayStart, status: "MISSED" },
     })
-    return !!sup
+    return !!missed
   }
 }

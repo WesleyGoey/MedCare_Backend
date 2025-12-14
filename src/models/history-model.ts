@@ -6,7 +6,7 @@ export type HistoryResponse = {
     scheduledDate: Date;
     scheduledTime: Date;
     timeTaken: Date | null;
-    status: "PENDING" | "DONE" | "MISSED"; // ✅ status should be here
+    status: "PENDING" | "DONE" | "MISSED";
 }
 
 export type ComplianceResponse = {
@@ -16,7 +16,6 @@ export type ComplianceResponse = {
     complianceRate: number;
 }
 
-// Helper Type untuk data yang di-include
 type HistoryWithRelations = History & {
     detail: ScheduleDetail & {
         schedule: Schedule & {
@@ -33,6 +32,6 @@ export function toHistoryResponse(history: any): HistoryResponse {
         scheduledDate: h.date,
         scheduledTime: h.detail?.time,
         timeTaken: h.timeTaken,
-        status: (h as any).status ?? (h.timeTaken ? "DONE" : "MISSED") // ✅ use history.status
+        status: h.status
     }
 }

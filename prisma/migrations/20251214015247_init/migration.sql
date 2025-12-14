@@ -72,17 +72,6 @@ CREATE TABLE "history" (
     CONSTRAINT "history_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "suppression" (
-    "id" SERIAL NOT NULL,
-    "userId" INTEGER NOT NULL,
-    "detailId" INTEGER NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL,
-    "expiresAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "suppression_pkey" PRIMARY KEY ("id")
-);
-
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
@@ -105,10 +94,7 @@ CREATE INDEX "schedule_details_scheduleId_idx" ON "schedule_details"("scheduleId
 CREATE INDEX "history_detailId_idx" ON "history"("detailId");
 
 -- CreateIndex
-CREATE INDEX "suppression_userId_idx" ON "suppression"("userId");
-
--- CreateIndex
-CREATE INDEX "suppression_detailId_idx" ON "suppression"("detailId");
+CREATE UNIQUE INDEX "history_detailId_date_key" ON "history"("detailId", "date");
 
 -- AddForeignKey
 ALTER TABLE "users" ADD CONSTRAINT "users_settingId_fkey" FOREIGN KEY ("settingId") REFERENCES "settings"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -124,9 +110,3 @@ ALTER TABLE "schedule_details" ADD CONSTRAINT "schedule_details_scheduleId_fkey"
 
 -- AddForeignKey
 ALTER TABLE "history" ADD CONSTRAINT "history_detailId_fkey" FOREIGN KEY ("detailId") REFERENCES "schedule_details"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "suppression" ADD CONSTRAINT "suppression_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "suppression" ADD CONSTRAINT "suppression_detailId_fkey" FOREIGN KEY ("detailId") REFERENCES "schedule_details"("id") ON DELETE CASCADE ON UPDATE CASCADE;

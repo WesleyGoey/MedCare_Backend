@@ -2,6 +2,8 @@ import { NextFunction, Response } from "express"
 import { HistoryService } from "../services/history-service";
 import { UserRequest } from "../models/user-request-model"
 import { ResponseError } from "../error/response-error"
+import { HistoryValidation } from "../validations/history-validation"
+import { Validation } from "../validations/validation"
 
 export class HistoryController {
 
@@ -58,6 +60,7 @@ export class HistoryController {
     // Mark detail as taken
     static async markAsTaken(req: UserRequest, res: Response, next: NextFunction) {
         try {
+            Validation.validate(HistoryValidation.MARK, req.body)
             const detailId = Number(req.params.detailId)
             if (!Number.isInteger(detailId) || detailId <= 0) {
                 throw new ResponseError(400, "Invalid detail id")
@@ -73,6 +76,7 @@ export class HistoryController {
     // Skip / suppress a single occurrence
     static async skipOccurrence(req: UserRequest, res: Response, next: NextFunction) {
         try {
+            Validation.validate(HistoryValidation.SKIP, req.body)
             const detailId = Number(req.params.detailId)
             if (!Number.isInteger(detailId) || detailId <= 0) {
                 throw new ResponseError(400, "Invalid detail id")
@@ -88,6 +92,7 @@ export class HistoryController {
     // Undo last mark-as-taken for given date
     static async undoMarkAsTaken(req: UserRequest, res: Response, next: NextFunction) {
         try {
+            Validation.validate(HistoryValidation.UNDO, req.body)
             const detailId = Number(req.params.detailId)
             if (!Number.isInteger(detailId) || detailId <= 0) {
                 throw new ResponseError(400, "Invalid detail id")
