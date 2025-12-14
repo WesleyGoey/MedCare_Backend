@@ -40,11 +40,12 @@ export class HistoryService {
             schedule: {
               include: {
                 medicine: true
+              }
             }
           }
         }
       },
-      orderBy: { date: 'desc' }
+      orderBy: { date: "desc" },
     });
     return histories.map(toHistoryResponse);
   }
