@@ -40,6 +40,12 @@ export class MedicineService {
     return toMedicineResponseList(medicines)
   }
 
+  static async getLowStock(user: UserJWTPayload): Promise<MedicineResponse[]> {
+    const all = await prismaClient.medicine.findMany({ where: { userId: user.id } })
+    const low = all.filter((m) => (m.stock ?? 0) <= (m.minStock ?? 0))
+    return toMedicineResponseList(low)
+  }
+
   static async getMedicineById(user: UserJWTPayload, id: number, includeSchedule: boolean = false): Promise<MedicineResponse | MedicineWithScheduleDetailsResponse> {
     if (includeSchedule) {
       const medicine = await prismaClient.medicine.findFirst({
@@ -131,11 +137,5 @@ export class MedicineService {
     await this.checkMedicineExists(user.id, id)
     await prismaClient.medicine.delete({ where: { id } })
     return "Medicine has been deleted successfully!"
-  }
-
-  static async checkLowStock(user: UserJWTPayload): Promise<MedicineResponse[]> {
-    const all = await prismaClient.medicine.findMany({ where: { userId: user.id } })
-    const low = all.filter((m) => (m.stock ?? 0) <= (m.minStock ?? 0))
-    return toMedicineResponseList(low)
   }
 }

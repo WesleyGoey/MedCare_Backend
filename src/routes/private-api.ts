@@ -19,7 +19,7 @@ privateRouter.get("/settings", SettingsController.getSettings)
 privateRouter.patch("/settings", SettingsController.updateSettings)
 
 privateRouter.get("/medicines", MedicineController.getAllMedicines)
-privateRouter.get("/medicines/low-stock", MedicineController.checkLowStock)
+privateRouter.get("/medicines/low-stock", MedicineController.getLowStock)
 privateRouter.get("/medicines/:medicineId", MedicineController.getMedicineById)
 privateRouter.post("/medicines", MedicineController.addMedicine)
 privateRouter.patch("/medicines/:medicineId", MedicineController.updateMedicine)

@@ -15,9 +15,9 @@ export class MedicineController {
     }
   }
 
-  static async checkLowStock(req: UserRequest, res: Response, next: NextFunction) {
+  static async getLowStock(req: UserRequest, res: Response, next: NextFunction) {
     try {
-      const data = await MedicineService.checkLowStock(req.user!)
+      const data = await MedicineService.getLowStock(req.user!)
       res.status(200).json({ data })
     } catch (error) {
       next(error)
