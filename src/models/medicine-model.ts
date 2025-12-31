@@ -7,7 +7,6 @@ export interface MedicineCreateUpdateRequest {
   stock: number
   minStock: number
   notes?: string
-  image?: string
 }
 
 export interface MedicineResponse extends MedicineCreateUpdateRequest {
@@ -29,7 +28,6 @@ export function toMedicineResponse(prismaMedicine: Medicine): MedicineResponse {
     stock: prismaMedicine.stock,
     minStock: prismaMedicine.minStock,
     notes: prismaMedicine.notes ?? undefined,
-    image: prismaMedicine.image ?? undefined,
   }
 }
 

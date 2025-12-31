@@ -48,7 +48,6 @@ model Medicine {
   stock     Int     @default(0)
   minStock  Int
   notes     String? @db.Text
-  image     String? @db.VarChar(255)
 
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   schedules Schedule[]

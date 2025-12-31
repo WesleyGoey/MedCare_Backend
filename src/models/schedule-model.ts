@@ -26,13 +26,12 @@ export interface ScheduleDetailResponse {
   scheduleId: number
   time: string // "HH:mm" formatted
   dayOfWeek?: number | null
-  // REMOVED: status field
   medicine: {
     id: number
     name: string
     dosage?: string | null
     type?: string | null
-    image?: string | null
+    // REMOVED: image
   }
   schedule: {
     id: number
@@ -50,13 +49,12 @@ export function toScheduleDetailResponse(
     scheduleId: d.scheduleId,
     time: timeStr,
     dayOfWeek: d.dayOfWeek ?? null,
-    // REMOVED: status
     medicine: {
       id: (d.schedule as any)?.medicine?.id ?? 0,
       name: (d.schedule as any)?.medicine?.name ?? "",
       dosage: (d.schedule as any)?.medicine?.dosage ?? null,
       type: (d.schedule as any)?.medicine?.type ?? null,
-      image: (d.schedule as any)?.medicine?.image ?? null,
+      // REMOVED: image
     },
     schedule: {
       id: (d.schedule as any)?.id ?? 0,

@@ -98,7 +98,6 @@ export class MedicineService {
         stock: validated.stock,
         minStock: validated.minStock,
         notes: validated.notes,
-        image: validated.image,
       },
     })
 
@@ -116,7 +115,7 @@ export class MedicineService {
     await this.checkMedicineExists(user.id, id)
 
     const data: any = {}
-    const keys: (keyof MedicineCreateUpdateRequest)[] = ["name", "type", "dosage", "stock", "minStock", "notes", "image"]
+    const keys: (keyof MedicineCreateUpdateRequest)[] = ["name", "type", "dosage", "stock", "minStock", "notes"]
     for (const k of keys) {
       if ((validated as any)[k] !== undefined) data[k] = (validated as any)[k]
     }

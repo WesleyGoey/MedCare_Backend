@@ -36,7 +36,6 @@ CREATE TABLE "medicine" (
     "stock" INTEGER NOT NULL DEFAULT 0,
     "minStock" INTEGER NOT NULL,
     "notes" TEXT,
-    "image" VARCHAR(255),
 
     CONSTRAINT "medicine_pkey" PRIMARY KEY ("id")
 );

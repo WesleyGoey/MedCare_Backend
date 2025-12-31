@@ -25,6 +25,5 @@ export class MedicineValidation {
       .min(0, { message: "minStock must be >= 0" }),
 
     notes: z.string().optional(),
-    image: z.string().optional(),
   })
 }
