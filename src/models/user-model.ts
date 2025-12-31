@@ -55,6 +55,8 @@ export interface UserUpdateRequest {
     name?: string
     phone?: string
     age?: number
+    currentPassword?: string
+    newPassword?: string
 }
 
 export function toUserProfileResponse(prismaUser: User): UserProfileResponse {

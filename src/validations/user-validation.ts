@@ -87,5 +87,17 @@ export class UserValidation {
                 message: "Age must be a positive number!",
             })
             .optional(),
+        currentPassword: z.string().optional(),
+        newPassword: z.string().min(8).optional(),
+    })
+    .refine((data) => {
+        // Jika ada newPassword, currentPassword wajib
+        if (data.newPassword) {
+            return !!data.currentPassword;
+        }
+        return true;
+    }, {
+        message: "currentPassword is required when changing password",
+        path: ["newPassword"],
     })
 }

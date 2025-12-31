@@ -16,15 +16,10 @@ import bcrypt from "bcrypt"
 
 export class UserService {
     static async register(request: RegisterUserRequest): Promise<UserResponse> {
-        const validatedData = Validation.validate(
-            UserValidation.REGISTER,
-            request
-        )
+        const validatedData = Validation.validate(UserValidation.REGISTER, request)
 
         const email = await prismaClient.user.findUnique({
-            where: {
-                email: validatedData.email,
-            },
+            where: { email: validatedData.email },
         })
 
         if (email) {
@@ -33,9 +28,7 @@ export class UserService {
 
         validatedData.password = await bcrypt.hash(validatedData.password, 10)
 
-        const settings = await prismaClient.settings.create({
-            data: {},
-        })
+        const settings = await prismaClient.settings.create({ data: {} })
 
         const user = await prismaClient.user.create({
             data: {
@@ -101,31 +94,42 @@ export class UserService {
             reqData
         )
 
-        const dbUser = await prismaClient.user.findUnique({
-            where: { id: user.id },
-        })
-
+        const dbUser = await prismaClient.user.findUnique({ where: { id: user.id } })
         if (!dbUser) {
             throw new ResponseError(401, "Authenticated user not found")
         }
 
         const data: any = {}
-        const keys: (keyof UserUpdateRequest)[] = ["name", "phone", "age"]
-        for (const k of keys) {
+        const basicKeys: (keyof UserUpdateRequest)[] = ["name", "phone", "age"]
+        for (const k of basicKeys) {
             if ((validated as any)[k] !== undefined) {
                 data[k] = (validated as any)[k]
             }
+        }
+
+        // Handle password change
+        if (validated.newPassword) {
+            if (!validated.currentPassword) {
+                throw new ResponseError(400, "Current password is required to change password")
+            }
+
+            const isCurrentPasswordValid = await bcrypt.compare(
+                validated.currentPassword,
+                dbUser.password
+            )
+
+            if (!isCurrentPasswordValid) {
+                throw new ResponseError(400, "Current password is incorrect!")
+            }
+
+            data.password = await bcrypt.hash(validated.newPassword, 10)
         }
 
         if (Object.keys(data).length === 0) {
             throw new ResponseError(400, "No valid fields provided to update")
         }
 
-        await prismaClient.user.update({
-            where: { id: user.id },
-            data,
-        })
-
+        await prismaClient.user.update({ where: { id: user.id }, data })
         return "Profile has been updated successfully!"
     }
 }
