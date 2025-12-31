@@ -21,7 +21,7 @@ export class UserService {
             request
         )
 
-        const email = await prismaClient.user.findFirst({
+        const email = await prismaClient.user.findUnique({
             where: {
                 email: validatedData.email,
             },
@@ -54,7 +54,7 @@ export class UserService {
     static async login(request: LoginUserRequest): Promise<UserResponse> {
         const validatedData = Validation.validate(UserValidation.LOGIN, request)
 
-        const user = await prismaClient.user.findFirst({
+        const user = await prismaClient.user.findUnique({
             where: {
                 email: validatedData.email,
             },
