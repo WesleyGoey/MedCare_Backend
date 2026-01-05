@@ -1,7 +1,4 @@
 -- CreateEnum
-CREATE TYPE "ScheduleType" AS ENUM ('DAILY', 'WEEKLY');
-
--- CreateEnum
 CREATE TYPE "ReminderStatus" AS ENUM ('PENDING', 'DONE', 'MISSED');
 
 -- CreateTable
@@ -36,6 +33,7 @@ CREATE TABLE "medicine" (
     "stock" INTEGER NOT NULL DEFAULT 0,
     "minStock" INTEGER NOT NULL,
     "notes" TEXT,
+    "status" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "medicine_pkey" PRIMARY KEY ("id")
 );
@@ -44,8 +42,8 @@ CREATE TABLE "medicine" (
 CREATE TABLE "schedules" (
     "id" SERIAL NOT NULL,
     "medicineId" INTEGER NOT NULL,
-    "scheduleType" "ScheduleType" NOT NULL,
     "startDate" TIMESTAMP(3) NOT NULL,
+    "status" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "schedules_pkey" PRIMARY KEY ("id")
 );
@@ -55,7 +53,6 @@ CREATE TABLE "schedule_details" (
     "id" SERIAL NOT NULL,
     "scheduleId" INTEGER NOT NULL,
     "time" TIME NOT NULL,
-    "dayOfWeek" INTEGER,
 
     CONSTRAINT "schedule_details_pkey" PRIMARY KEY ("id")
 );

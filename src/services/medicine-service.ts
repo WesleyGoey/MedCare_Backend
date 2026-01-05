@@ -15,12 +15,16 @@ import { Validation } from "../validations/validation"
 import { UserJWTPayload } from "../models/user-model"
 
 export class MedicineService {
+  // Get All Medicines (filter by status = true)
   static async getAllMedicines(user: UserJWTPayload, includeSchedule: boolean = false): Promise<MedicineResponse[] | MedicineWithScheduleDetailsResponse[]> {
+    const whereClause = { userId: user.id, status: true } // NEW: filter by status
+
     if (includeSchedule) {
       const medicines = await prismaClient.medicine.findMany({
-        where: { userId: user.id },
+        where: whereClause,
         include: {
           schedules: {
+            where: { status: true }, // NEW: filter schedule by status
             include: {
               details: {
                 orderBy: { time: "asc" },
@@ -34,24 +38,29 @@ export class MedicineService {
     }
 
     const medicines = await prismaClient.medicine.findMany({
-      where: { userId: user.id },
+      where: whereClause,
       orderBy: { id: "asc" },
     })
     return toMedicineResponseList(medicines)
   }
 
+  // Get Low Stock (filter by status = true)
   static async getLowStock(user: UserJWTPayload): Promise<MedicineResponse[]> {
-    const all = await prismaClient.medicine.findMany({ where: { userId: user.id } })
+    const all = await prismaClient.medicine.findMany({ 
+      where: { userId: user.id, status: true } // NEW: filter by status
+    })
     const low = all.filter((m) => (m.stock ?? 0) <= (m.minStock ?? 0))
     return toMedicineResponseList(low)
   }
 
+  // Get Medicine By ID (filter by status = true)
   static async getMedicineById(user: UserJWTPayload, id: number, includeSchedule: boolean = false): Promise<MedicineResponse | MedicineWithScheduleDetailsResponse> {
     if (includeSchedule) {
       const medicine = await prismaClient.medicine.findFirst({
-        where: { id, userId: user.id },
+        where: { id, userId: user.id, status: true }, // NEW: filter by status
         include: {
           schedules: {
+            where: { status: true }, // NEW: filter schedule by status
             include: {
               details: {
                 orderBy: { time: "asc" },
@@ -70,9 +79,10 @@ export class MedicineService {
     return toMedicineResponse(medicine)
   }
 
+  // Check Medicine Exists (filter by status = true)
   static async checkMedicineExists(userId: number, id: number): Promise<Medicine> {
     const medicine = await prismaClient.medicine.findFirst({
-      where: { id, userId },
+      where: { id, userId, status: true }, // NEW: filter by status
     })
     if (!medicine) {
       throw new ResponseError(404, "Medicine not found!")
@@ -80,7 +90,7 @@ export class MedicineService {
     return medicine
   }
 
-  // Add Medicine
+  // Add Medicine (status default true dari schema)
   static async addMedicine(user: UserJWTPayload, reqData: MedicineCreateUpdateRequest): Promise<string> {
     const validated = Validation.validate(MedicineValidation.CREATE_UPDATE, reqData)
 
@@ -98,6 +108,7 @@ export class MedicineService {
         stock: validated.stock,
         minStock: validated.minStock,
         notes: validated.notes,
+        // status default true dari schema
       },
     })
 
@@ -132,9 +143,16 @@ export class MedicineService {
     return "Medicine has been updated successfully!"
   }
 
+  // Delete Medicine (SOFT DELETE)
   static async deleteMedicine(user: UserJWTPayload, id: number): Promise<string> {
     await this.checkMedicineExists(user.id, id)
-    await prismaClient.medicine.delete({ where: { id } })
+    
+    // SOFT DELETE: set status = false instead of DELETE
+    await prismaClient.medicine.update({ 
+      where: { id }, 
+      data: { status: false } 
+    })
+    
     return "Medicine has been deleted successfully!"
   }
 }

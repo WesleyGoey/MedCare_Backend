@@ -3,21 +3,20 @@ import { Schedule, ScheduleDetail, Medicine } from "../../generated/prisma"
 // request for creating schedule
 export interface ScheduleCreateRequest {
   medicineId: number
-  scheduleType: "DAILY" | "WEEKLY"
   startDate: string // ISO date
   details: ScheduleDetailInput[]
+  // REMOVED: scheduleType (sekarang semua DAILY)
 }
 
 export interface ScheduleDetailInput {
   time: string // "HH:mm"
-  dayOfWeek?: number // 0-6, required for WEEKLY
+  // REMOVED: dayOfWeek
 }
 
 // request for updating schedule detail
 export interface ScheduleDetailUpdateRequest {
   time?: string // "HH:mm"
-  dayOfWeek?: number
-  // REMOVED: status field (now in History)
+  // REMOVED: dayOfWeek
 }
 
 // response for schedule detail (used as reminder in UI)
@@ -25,18 +24,17 @@ export interface ScheduleDetailResponse {
   id: number
   scheduleId: number
   time: string // "HH:mm" formatted
-  dayOfWeek?: number | null
   medicine: {
     id: number
     name: string
     dosage?: string | null
     type?: string | null
-    // REMOVED: image
   }
   schedule: {
     id: number
-    scheduleType: string
     startDate: string
+    status: boolean // NEW
+    // REMOVED: scheduleType
   }
 }
 
@@ -48,20 +46,18 @@ export function toScheduleDetailResponse(
     id: d.id,
     scheduleId: d.scheduleId,
     time: timeStr,
-    dayOfWeek: d.dayOfWeek ?? null,
     medicine: {
       id: (d.schedule as any)?.medicine?.id ?? 0,
       name: (d.schedule as any)?.medicine?.name ?? "",
       dosage: (d.schedule as any)?.medicine?.dosage ?? null,
       type: (d.schedule as any)?.medicine?.type ?? null,
-      // REMOVED: image
     },
     schedule: {
       id: (d.schedule as any)?.id ?? 0,
-      scheduleType: (d.schedule as any)?.scheduleType ?? "",
       startDate: (d.schedule as any)?.startDate instanceof Date 
         ? (d.schedule as any).startDate.toISOString() 
         : "",
+      status: (d.schedule as any)?.status ?? true, // NEW
     },
   }
 }

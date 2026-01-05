@@ -23,7 +23,7 @@ async function main() {
     },
   });
 
-  // 5 medicines
+  // 5 medicines (status default true)
   const medsData = [
     { name: "Aspirin", type: "Tablet", dosage: "500mg", stock: 30, minStock: 5, notes: "After meal" },
     { name: "Paracetamol", type: "Tablet", dosage: "500mg", stock: 20, minStock: 5, notes: "Pain relief" },
@@ -43,15 +43,16 @@ async function main() {
         stock: m.stock,
         minStock: m.minStock,
         notes: m.notes,
+        // status default true dari schema
       },
     });
     medicines.push(med);
   }
 
+  // 3 schedules (semua DAILY, no scheduleType, no dayOfWeek, status default true)
   const schedulesToCreate = [
     {
       medicine: medicines[0].id,
-      scheduleType: "DAILY",
       startDate: new Date(),
       details: [
         { time: new Date("1970-01-01T08:00:00Z") },
@@ -60,16 +61,14 @@ async function main() {
     },
     {
       medicine: medicines[1].id,
-      scheduleType: "WEEKLY",
       startDate: new Date(),
       details: [
-        { time: new Date("1970-01-01T09:00:00Z"), dayOfWeek: 1 },
-        { time: new Date("1970-01-01T21:00:00Z"), dayOfWeek: 4 },
+        { time: new Date("1970-01-01T09:00:00Z") },
+        { time: new Date("1970-01-01T21:00:00Z") },
       ],
     },
     {
       medicine: medicines[2].id,
-      scheduleType: "DAILY",
       startDate: new Date(),
       details: [
         { time: new Date("1970-01-01T07:30:00Z") },
@@ -81,12 +80,13 @@ async function main() {
     await prisma.schedule.create({
       data: {
         medicineId: s.medicine,
-        scheduleType: s.scheduleType as any,
         startDate: s.startDate,
+        // REMOVED: scheduleType
+        // status default true dari schema
         details: {
           create: s.details.map((d: any) => ({
             time: d.time,
-            dayOfWeek: d.dayOfWeek ?? null,
+            // REMOVED: dayOfWeek
           })),
         },
       },

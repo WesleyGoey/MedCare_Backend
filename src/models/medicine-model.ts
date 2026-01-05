@@ -7,11 +7,13 @@ export interface MedicineCreateUpdateRequest {
   stock: number
   minStock: number
   notes?: string
+  // status akan default true saat create, tidak perlu di request
 }
 
 export interface MedicineResponse extends MedicineCreateUpdateRequest {
   id: number
   userId: number
+  status: boolean // NEW
 }
 
 export function toMedicineResponseList(prismaMedicine: Medicine[]): MedicineResponse[] {
@@ -28,6 +30,7 @@ export function toMedicineResponse(prismaMedicine: Medicine): MedicineResponse {
     stock: prismaMedicine.stock,
     minStock: prismaMedicine.minStock,
     notes: prismaMedicine.notes ?? undefined,
+    status: prismaMedicine.status, // NEW
   }
 }
 
@@ -38,15 +41,16 @@ export interface MedicineWithScheduleDetailsResponse extends MedicineResponse {
 
 export interface ScheduleWithDetailsResponse {
   id: number
-  scheduleType: string
   startDate: string
+  status: boolean // NEW
   details: ScheduleDetailBasicResponse[]
+  // REMOVED: scheduleType
 }
 
 export interface ScheduleDetailBasicResponse {
   id: number
   time: string
-  dayOfWeek?: number | null
+  // REMOVED: dayOfWeek
 }
 
 export function toMedicineWithScheduleDetailsResponse(
@@ -57,12 +61,11 @@ export function toMedicineWithScheduleDetailsResponse(
     ...base,
     schedules: (prismaMedicine.schedules ?? []).map((s) => ({
       id: s.id,
-      scheduleType: s.scheduleType,
       startDate: s.startDate.toISOString(),
+      status: s.status, // NEW
       details: (s.details ?? []).map((d) => ({
         id: d.id,
         time: d.time instanceof Date ? d.time.toISOString().substr(11, 5) : String(d.time).substr(0, 5),
-        dayOfWeek: d.dayOfWeek ?? null,
       })),
     })),
   }
