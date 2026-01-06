@@ -19,23 +19,9 @@ model User {
   phone    String @db.VarChar(50)
   age      Int
 
-  settingId Int      @unique
-  settings  Settings @relation(name: "UserSettings", fields: [settingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
   medicines Medicine[]
 
-  @@index([settingId])
   @@map("users")
-}
-
-model Settings {
-  id                Int    @id @default(autoincrement())
-  alarmSound        String @default("Default") @db.VarChar(100)
-  notificationSound String @default("Default") @db.VarChar(100)
-
-  user User? @relation(name: "UserSettings")
-
-  @@map("settings")
 }
 
 model Medicine {
@@ -47,7 +33,7 @@ model Medicine {
   stock     Int     @default(0)
   minStock  Int
   notes     String? @db.Text
-  status    Boolean @default(true) // NEW: untuk soft delete
+  status    Boolean @default(true)
 
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   schedules Schedule[]
@@ -60,8 +46,7 @@ model Schedule {
   id         Int      @id @default(autoincrement())
   medicineId Int
   startDate  DateTime
-  status     Boolean  @default(true) // NEW: untuk soft delete
-  // REMOVED: scheduleType (sekarang semua DAILY)
+  status     Boolean  @default(true)
 
   medicine Medicine         @relation(fields: [medicineId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   details  ScheduleDetail[]
@@ -74,7 +59,6 @@ model ScheduleDetail {
   id         Int      @id @default(autoincrement())
   scheduleId Int
   time       DateTime @db.Time
-  // REMOVED: dayOfWeek (tidak perlu karena DAILY only)
   
   schedule  Schedule  @relation(fields: [scheduleId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   histories History[]
@@ -96,8 +80,6 @@ model History {
   @@unique([detailId, date])
   @@map("history")
 }
-
-// REMOVED: ScheduleType enum (tidak perlu lagi)
 
 enum ReminderStatus {
   PENDING

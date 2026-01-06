@@ -1,5 +1,4 @@
 import { User } from "../../generated/prisma"
-import { string } from "zod"
 import { generateToken } from "../utils/jwt-util"
 
 export interface UserJWTPayload {
@@ -48,7 +47,6 @@ export interface UserProfileResponse {
     email: string
     phone: string
     age: number
-    settingId?: number
 }
 
 export interface UserUpdateRequest {
@@ -66,6 +64,5 @@ export function toUserProfileResponse(prismaUser: User): UserProfileResponse {
         email: prismaUser.email,
         phone: prismaUser.phone,
         age: prismaUser.age,
-        settingId: prismaUser.settingId,
     }
 }
