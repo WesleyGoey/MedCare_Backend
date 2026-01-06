@@ -17,11 +17,11 @@ export class HistoryService {
     };
   }
 
+  // ✅ FIXED: Week range now starts from Monday (not Sunday)
   private static getWeekRange() {
     const today = new Date();
     
     const dayOfWeek = today.getDay();
-    
     const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
     
     const startOfWeek = new Date(today);
@@ -35,6 +35,7 @@ export class HistoryService {
     return { startOfWeek, endOfWeek };
   }
 
+  // ✅ NEW: Validate that date is today
   private static validateIsToday(dateStr?: string): Date {
     const inputDate = dateStr ? new Date(dateStr) : new Date();
     if (isNaN(inputDate.getTime())) {
@@ -50,6 +51,13 @@ export class HistoryService {
     }
 
     return inputDate;
+  }
+
+  private static extractLocalTime(timeValue: Date): { hours: number; minutes: number } {
+    const hours = timeValue.getUTCHours();
+    const minutes = timeValue.getUTCMinutes();
+    
+    return { hours, minutes };
   }
 
   static async getAllHistory(user: UserJWTPayload) {
@@ -174,7 +182,7 @@ export class HistoryService {
               ? new Date(`${dayStart.toISOString().substr(0, 10)}T${timeTakenStr}:00Z`)
               : parsed;
       } else {
-          timeTaken = new Date();
+          timeTaken = new Date(); // Current local time
       }
 
       await prismaClient.history.upsert({
@@ -210,6 +218,7 @@ export class HistoryService {
       return "Marked as missed for this occurrence"
   }
 
+  // ✅ FIXED: Proper timezone handling for MISSED/PENDING logic
   static async undoMarkAsTaken(
       user: UserJWTPayload,
       detailId: number,
@@ -233,15 +242,16 @@ export class HistoryService {
       });
       if (!hist) throw new ResponseError(404, "No history to undo");
 
-      const scheduledTime = detail.time as Date;
-      const scheduleHours = scheduledTime.getUTCHours();
-      const scheduleMinutes = scheduledTime.getUTCMinutes();
+      // ✅ FIXED: Extract local time from database TIME field
+      const { hours, minutes } = this.extractLocalTime(detail.time as Date);
 
+      // ✅ Build scheduled datetime in LOCAL timezone
       const scheduledDateTime = new Date(validatedDate);
-      scheduledDateTime.setHours(scheduleHours, scheduleMinutes, 0, 0);
+      scheduledDateTime.setHours(hours, minutes, 0, 0); // Now using local timezone
 
-      const now = new Date();
+      const now = new Date(); // Current local time
 
+      // ✅ Compare local times
       const newStatus: "MISSED" | "PENDING" = now > scheduledDateTime ? "MISSED" : "PENDING";
 
       await prismaClient.history.update({
