@@ -4,13 +4,6 @@ import bcrypt from "bcrypt";
 const prisma = new PrismaClient();
 
 async function main() {
-  const settings = await prisma.settings.create({
-    data: {
-      alarmSound: "Default",
-      notificationSound: "Default",
-    },
-  });
-
   const hashedPassword = await bcrypt.hash("password123", 10);
   const user = await prisma.user.create({
     data: {
@@ -19,7 +12,6 @@ async function main() {
       password: hashedPassword,
       phone: "081234567890",
       age: 30,
-      settingId: settings.id,
     },
   });
 
@@ -43,13 +35,12 @@ async function main() {
         stock: m.stock,
         minStock: m.minStock,
         notes: m.notes,
-        // status default true dari schema
       },
     });
     medicines.push(med);
   }
 
-  // 3 schedules (semua DAILY, no scheduleType, no dayOfWeek, status default true)
+  // 3 schedules (semua DAILY, status default true)
   const schedulesToCreate = [
     {
       medicine: medicines[0].id,
@@ -81,12 +72,9 @@ async function main() {
       data: {
         medicineId: s.medicine,
         startDate: s.startDate,
-        // REMOVED: scheduleType
-        // status default true dari schema
         details: {
           create: s.details.map((d: any) => ({
             time: d.time,
-            // REMOVED: dayOfWeek
           })),
         },
       },
