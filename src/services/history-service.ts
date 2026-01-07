@@ -39,29 +39,34 @@ export class HistoryService {
   }
 
   // ✅ FIXED: Validate date using UTC
-  private static validateIsToday(dateStr?: string): Date {
-    const now = new Date();
-    const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
 
-    let inputDate: Date;
-    if (dateStr) {
-      inputDate = new Date(dateStr);
-      if (isNaN(inputDate.getTime())) {
-        throw new ResponseError(400, "Invalid date format");
-      }
-    } else {
-      inputDate = todayUTC;
+
+private static validateIsToday(dateStr?: string): Date {
+  const now = new Date();
+  // Ambil tanggal hari ini dalam UTC (yyyy-mm-dd 00:00:00 UTC)
+  const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+
+  let inputDate: Date;
+  if (dateStr) {
+    // Jika dateStr adalah "2026-01-07", JS akan otomatis menganggapnya UTC Midnight.
+    inputDate = new Date(dateStr); 
+    if (isNaN(inputDate.getTime())) {
+      throw new ResponseError(400, "Invalid date format");
     }
-
-    // ✅ Normalize input to UTC midnight
-    const inputUTC = new Date(Date.UTC(inputDate.getUTCFullYear(), inputDate.getUTCMonth(), inputDate.getUTCDate(), 0, 0, 0, 0));
-
-    if (inputUTC.getTime() !== todayUTC.getTime()) {
-      throw new ResponseError(400, "Aksi hanya dapat dilakukan di hari ini");
-    }
-
-    return inputUTC;
+  } else {
+    inputDate = todayUTC;
   }
+
+  // Paksa input menjadi midnight UTC untuk perbandingan
+  const inputUTC = new Date(Date.UTC(inputDate.getUTCFullYear(), inputDate.getUTCMonth(), inputDate.getUTCDate(), 0, 0, 0, 0));
+
+  if (inputUTC.getTime() !== todayUTC.getTime()) {
+    console.log(`Validation Failed: Input ${inputUTC.toISOString()} vs Today ${todayUTC.toISOString()}`);
+    throw new ResponseError(400, "Aksi hanya dapat dilakukan di hari ini");
+  }
+
+  return inputUTC;
+}
 
   private static extractLocalTime(timeValue: Date): { hours: number; minutes: number } {
     const hours = timeValue.getUTCHours();
