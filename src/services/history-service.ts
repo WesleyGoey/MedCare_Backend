@@ -17,7 +17,6 @@ export class HistoryService {
     };
   }
 
-  // ✅ FIXED: Week range now starts from Monday (not Sunday)
   private static getWeekRange() {
     const today = new Date();
     
@@ -35,7 +34,6 @@ export class HistoryService {
     return { startOfWeek, endOfWeek };
   }
 
-  // ✅ NEW: Validate that date is today
   private static validateIsToday(dateStr?: string): Date {
     const inputDate = dateStr ? new Date(dateStr) : new Date();
     if (isNaN(inputDate.getTime())) {
@@ -112,32 +110,6 @@ export class HistoryService {
     });
   }
 
-  static async getWeeklyComplianceStats(user: UserJWTPayload) {
-    const { startOfWeek, endOfWeek } = this.getWeekRange();
-
-    const histories = await prismaClient.history.findMany({
-      where: {
-        ...this.getBaseQuery(user.id),
-        date: {
-          gte: startOfWeek,
-          lte: endOfWeek
-        }
-      },
-      include: {
-        detail: {
-          include: {
-            schedule: {
-              include: { medicine: true }
-            }
-          }
-        }
-      },
-      orderBy: { date: 'asc' }
-    });
-    
-    return histories.map(toHistoryResponse);
-  }
-
   static async getRecentActivity(user: UserJWTPayload) {
     const histories = await prismaClient.history.findMany({
       where: this.getBaseQuery(user.id),
@@ -168,6 +140,7 @@ export class HistoryService {
           where: { id: detailId },
           include: { schedule: { include: { medicine: true } } },
       })
+      
       if (!detail || (detail as any).schedule?.medicine?.userId !== user.id) {
           throw new ResponseError(404, "Schedule detail not found")
       }
@@ -182,13 +155,18 @@ export class HistoryService {
               ? new Date(`${dayStart.toISOString().substr(0, 10)}T${timeTakenStr}:00Z`)
               : parsed;
       } else {
-          timeTaken = new Date(); // Current local time
+          timeTaken = new Date();
       }
 
       await prismaClient.history.upsert({
         where: { detailId_date: { detailId, date: dayStart } },
         update: { timeTaken, status: "DONE" },
         create: { detailId, date: dayStart, timeTaken, status: "DONE" },
+      });
+
+      await prismaClient.medicine.update({
+        where: { id: detail.schedule.medicineId },
+        data: { stock: { decrement: 1 } }
       });
 
       return "Marked as taken";
@@ -199,13 +177,14 @@ export class HistoryService {
       detailId: number,
       dateStr?: string
   ): Promise<string> {
+      this.validateIsToday(dateStr);
+
       const detail = await prismaClient.scheduleDetail.findFirst({
           where: { id: detailId, schedule: { medicine: { userId: user.id } } },
       })
       if (!detail) throw new ResponseError(404, "Schedule detail not found")
 
       const date = dateStr ? new Date(dateStr) : new Date()
-      if (isNaN(date.getTime())) throw new ResponseError(400, "Invalid date")
       const dayStart = new Date(date)
       dayStart.setHours(0, 0, 0, 0)
 
@@ -218,7 +197,6 @@ export class HistoryService {
       return "Marked as missed for this occurrence"
   }
 
-  // ✅ FIXED: Proper timezone handling for MISSED/PENDING logic
   static async undoMarkAsTaken(
       user: UserJWTPayload,
       detailId: number,
@@ -230,6 +208,7 @@ export class HistoryService {
           where: { id: detailId },
           include: { schedule: { include: { medicine: true } } },
       })
+      
       if (!detail || (detail as any).schedule?.medicine?.userId !== user.id) {
           throw new ResponseError(404, "Schedule detail not found")
       }
@@ -240,18 +219,21 @@ export class HistoryService {
       const hist = await prismaClient.history.findFirst({ 
         where: { detailId, date: dayStart } 
       });
+      
       if (!hist) throw new ResponseError(404, "No history to undo");
 
-      // ✅ FIXED: Extract local time from database TIME field
+      if (hist.status === "DONE") {
+          await prismaClient.medicine.update({
+              where: { id: detail.schedule.medicineId },
+              data: { stock: { increment: 1 } }
+          });
+      }
+
       const { hours, minutes } = this.extractLocalTime(detail.time as Date);
-
-      // ✅ Build scheduled datetime in LOCAL timezone
       const scheduledDateTime = new Date(validatedDate);
-      scheduledDateTime.setHours(hours, minutes, 0, 0); // Now using local timezone
+      scheduledDateTime.setHours(hours, minutes, 0, 0);
 
-      const now = new Date(); // Current local time
-
-      // ✅ Compare local times
+      const now = new Date();
       const newStatus: "MISSED" | "PENDING" = now > scheduledDateTime ? "MISSED" : "PENDING";
 
       await prismaClient.history.update({
@@ -259,6 +241,6 @@ export class HistoryService {
         data: { status: newStatus, timeTaken: null },
       });
 
-      return "Undo successful";
+      return "Undo successful, stock restored";
   }
 }
