@@ -17,47 +17,50 @@ export class HistoryService {
     };
   }
 
-  // ✅ Mencari rentang Senin - Minggu
-  // ✅ Revisi GetWeekRange di HistoryService.ts
-private static getWeekRange() {
-  const now = new Date();
-  // Buat objek date yang merepresentasikan hari ini jam 00:00 local
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  
-  const dayOfWeek = today.getDay(); // 0 (Sun) - 6 (Sat)
-  
-  // Hitung selisih ke hari Senin
-  // Jika hari ini Minggu (0), selisihnya 6 hari ke belakang.
-  // Jika hari lain, selisihnya (dayOfWeek - 1).
-  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-  
-  const startOfWeek = new Date(today);
-  startOfWeek.setDate(today.getDate() - daysToMonday);
-  startOfWeek.setHours(0, 0, 0, 0);
+  // ✅ FIXED: Week range now starts from Monday (UTC)
+  private static getWeekRange() {
+    const now = new Date();
+    
+    // ✅ Get today in UTC midnight
+    const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+    
+    const dayOfWeek = todayUTC.getUTCDay(); // 0 (Sun) - 6 (Sat)
+    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    
+    const startOfWeek = new Date(todayUTC);
+    startOfWeek.setUTCDate(todayUTC.getUTCDate() - daysToMonday);
+    startOfWeek.setUTCHours(0, 0, 0, 0);
 
-  const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(startOfWeek.getDate() + 6);
-  endOfWeek.setHours(23, 59, 59, 999);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setUTCDate(startOfWeek.getUTCDate() + 6);
+    endOfWeek.setUTCHours(23, 59, 59, 999);
 
-  return { startOfWeek, endOfWeek };
-}
+    return { startOfWeek, endOfWeek };
+  }
 
-  // ✅ Validasi agar aksi hanya bisa dilakukan di hari ini
+  // ✅ FIXED: Validate date using UTC
   private static validateIsToday(dateStr?: string): Date {
-    const inputDate = dateStr ? new Date(dateStr) : new Date();
-    if (isNaN(inputDate.getTime())) {
-      throw new ResponseError(400, "Invalid date format");
+    const now = new Date();
+    const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+
+    let inputDate: Date;
+    if (dateStr) {
+      inputDate = new Date(dateStr);
+      if (isNaN(inputDate.getTime())) {
+        throw new ResponseError(400, "Invalid date format");
+      }
+    } else {
+      inputDate = todayUTC;
     }
 
-    const today = new Date();
-    const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const inputDateOnly = new Date(inputDate.getFullYear(), inputDate.getMonth(), inputDate.getDate());
+    // ✅ Normalize input to UTC midnight
+    const inputUTC = new Date(Date.UTC(inputDate.getUTCFullYear(), inputDate.getUTCMonth(), inputDate.getUTCDate(), 0, 0, 0, 0));
 
-    if (inputDateOnly.getTime() !== todayDateOnly.getTime()) {
+    if (inputUTC.getTime() !== todayUTC.getTime()) {
       throw new ResponseError(400, "Aksi hanya dapat dilakukan di hari ini");
     }
 
-    return inputDate;
+    return inputUTC;
   }
 
   private static extractLocalTime(timeValue: Date): { hours: number; minutes: number } {
@@ -66,11 +69,25 @@ private static getWeekRange() {
     return { hours, minutes };
   }
 
+  // ✅ Helper: Get UTC date for today
+  private static getTodayUTC(): Date {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+  }
+
   static async getAllHistory(user: UserJWTPayload) {
     const histories = await prismaClient.history.findMany({
       where: this.getBaseQuery(user.id),
       include: {
-        detail: { include: { schedule: { include: { medicine: true } } } }
+        detail: {
+          include: {
+            schedule: {
+              include: {
+                medicine: true
+              }
+            }
+          }
+        }
       },
       orderBy: { date: "desc" },
     });
@@ -79,23 +96,32 @@ private static getWeekRange() {
 
   static async getWeeklyComplianceStatsTotal(user: UserJWTPayload): Promise<number> {
     const { startOfWeek, endOfWeek } = this.getWeekRange();
+
     const weekFilter: Prisma.HistoryWhereInput = {
       ...this.getBaseQuery(user.id),
-      date: { gte: startOfWeek, lte: endOfWeek }
+      date: {
+        gte: startOfWeek,
+        lte: endOfWeek
+      }
     };
 
     const total = await prismaClient.history.count({ where: weekFilter });
     if (total === 0) return 0;
     const completed = await prismaClient.history.count({ where: { ...weekFilter, status: "DONE" } });
-    return Math.round((completed / total) * 100 * 100) / 100;
+    const complianceRate = (completed / total) * 100;
+    return Math.round(complianceRate * 100) / 100;
   }
 
   static async getWeeklyMissedDose(user: UserJWTPayload): Promise<number> {
     const { startOfWeek, endOfWeek } = this.getWeekRange();
+
     return await prismaClient.history.count({
       where: {
         ...this.getBaseQuery(user.id),
-        date: { gte: startOfWeek, lte: endOfWeek },
+        date: {
+          gte: startOfWeek,
+          lte: endOfWeek
+        },
         status: "MISSED"
       }
     });
@@ -103,130 +129,157 @@ private static getWeekRange() {
 
   static async getWeeklyComplianceStats(user: UserJWTPayload) {
     const { startOfWeek, endOfWeek } = this.getWeekRange();
+
     const histories = await prismaClient.history.findMany({
       where: {
         ...this.getBaseQuery(user.id),
-        date: { gte: startOfWeek, lte: endOfWeek }
+        date: {
+          gte: startOfWeek,
+          lte: endOfWeek
+        }
       },
       include: {
-        detail: { include: { schedule: { include: { medicine: true } } } }
+        detail: {
+          include: {
+            schedule: {
+              include: { medicine: true }
+            }
+          }
+        }
       },
       orderBy: { date: 'asc' }
+    });
+    
+    return histories.map(toHistoryResponse);
+  }
+
+  static async getRecentActivity(user: UserJWTPayload) {
+    const histories = await prismaClient.history.findMany({
+      where: {
+        ...this.getBaseQuery(user.id),
+        status: { in: ["DONE", "MISSED"] }
+      },
+      take: 5,
+      orderBy: { updatedAt: 'desc' },
+      include: {
+        detail: {
+          include: {
+            schedule: {
+              include: { medicine: true }
+            }
+          }
+        }
+      }
     });
     return histories.map(toHistoryResponse);
   }
 
-  // ✅ Revisi getRecentActivity di HistoryService.ts
-static async getRecentActivity(user: UserJWTPayload) {
-    return await prismaClient.history.findMany({
-      where: {
-        ...this.getBaseQuery(user.id),
-        status: { in: ["DONE", "MISSED"] } // ✅ Hanya DONE/MISSED
-      },
-      take: 5,
-      orderBy: { updatedAt: 'desc' }, // ✅ Error hilang setelah migrate
-      include: {
-        detail: { include: { schedule: { include: { medicine: true } } } }
+  static async markDetailAsTaken(
+      user: UserJWTPayload,
+      detailId: number,
+      dateStr?: string,
+      timeTakenStr?: string
+  ): Promise<string> {
+      // ✅ Use UTC validation
+      const validatedDate = this.validateIsToday(dateStr);
+
+      const detail = await prismaClient.scheduleDetail.findFirst({
+          where: { id: detailId },
+          include: { schedule: { include: { medicine: true } } },
+      })
+      if (!detail || (detail as any).schedule?.medicine?.userId !== user.id) {
+          throw new ResponseError(404, "Schedule detail not found")
       }
-    }).then(histories => histories.map(toHistoryResponse));
-  }
 
-  static async markDetailAsTaken(user: UserJWTPayload, detailId: number, dateStr?: string, timeTakenStr?: string): Promise<string> {
-    const validatedDate = this.validateIsToday(dateStr);
-    const detail = await prismaClient.scheduleDetail.findFirst({
-      where: { id: detailId },
-      include: { schedule: { include: { medicine: true } } },
-    });
+      let timeTaken: Date;
+      if (timeTakenStr) {
+          timeTaken = new Date(timeTakenStr);
+          if (isNaN(timeTaken.getTime())) {
+              throw new ResponseError(400, "Invalid timeTaken format");
+          }
+      } else {
+          timeTaken = new Date(); // Current UTC time
+      }
 
-    if (!detail || (detail as any).schedule?.medicine?.userId !== user.id) {
-      throw new ResponseError(404, "Schedule detail not found");
-    }
+      await prismaClient.$transaction(async (tx) => {
+        await tx.history.upsert({
+          where: { detailId_date: { detailId, date: validatedDate } },
+          update: { timeTaken, status: "DONE" },
+          create: { detailId, date: validatedDate, timeTaken, status: "DONE" },
+        });
 
-    const dayStart = new Date(validatedDate);
-    dayStart.setHours(0, 0, 0, 0);
-
-    let timeTaken: Date;
-    if (timeTakenStr) {
-      const parsed = new Date(timeTakenStr);
-      timeTaken = isNaN(parsed.getTime()) ? new Date(`${dayStart.toISOString().substr(0, 10)}T${timeTakenStr}:00Z`) : parsed;
-    } else {
-      timeTaken = new Date();
-    }
-
-    // ✅ Transaction: History & Stock Update
-    await prismaClient.$transaction(async (tx) => {
-      await tx.history.upsert({
-        where: { detailId_date: { detailId, date: dayStart } },
-        update: { timeTaken, status: "DONE" },
-        create: { detailId, date: dayStart, timeTaken, status: "DONE" },
-      });
-
-      await tx.medicine.update({
-        where: { id: detail.schedule.medicineId },
-        data: { stock: { decrement: 1 } }
-      });
-    });
-
-    return "Marked as taken";
-  }
-
-  static async skipDetail(user: UserJWTPayload, detailId: number, dateStr?: string): Promise<string> {
-    this.validateIsToday(dateStr);
-    const detail = await prismaClient.scheduleDetail.findFirst({
-      where: { id: detailId, schedule: { medicine: { userId: user.id } } },
-    });
-    if (!detail) throw new ResponseError(404, "Schedule detail not found");
-
-    const date = dateStr ? new Date(dateStr) : new Date();
-    const dayStart = new Date(date);
-    dayStart.setHours(0, 0, 0, 0);
-
-    await prismaClient.history.upsert({
-      where: { detailId_date: { detailId, date: dayStart } },
-      update: { timeTaken: null, status: "MISSED" },
-      create: { detailId, date: dayStart, timeTaken: null, status: "MISSED" },
-    });
-
-    return "Marked as missed for this occurrence";
-  }
-
-  static async undoMarkAsTaken(user: UserJWTPayload, detailId: number, dateStr?: string): Promise<string> {
-    const validatedDate = this.validateIsToday(dateStr);
-    const detail = await prismaClient.scheduleDetail.findFirst({
-      where: { id: detailId },
-      include: { schedule: { include: { medicine: true } } },
-    });
-
-    if (!detail || (detail as any).schedule?.medicine?.userId !== user.id) {
-      throw new ResponseError(404, "Schedule detail not found");
-    }
-
-    const dayStart = new Date(validatedDate);
-    dayStart.setHours(0, 0, 0, 0);
-
-    const hist = await prismaClient.history.findFirst({ where: { detailId, date: dayStart } });
-    if (!hist) throw new ResponseError(404, "No history to undo");
-
-    const { hours, minutes } = this.extractLocalTime(detail.time as Date);
-    const scheduledDateTime = new Date(validatedDate);
-    scheduledDateTime.setHours(hours, minutes, 0, 0);
-    const now = new Date();
-    const newStatus: "MISSED" | "PENDING" = now > scheduledDateTime ? "MISSED" : "PENDING";
-
-    // ✅ Transaction: History Update & Restock
-    await prismaClient.$transaction(async (tx) => {
-      if (hist.status === "DONE") {
         await tx.medicine.update({
           where: { id: detail.schedule.medicineId },
-          data: { stock: { increment: 1 } }
+          data: { stock: { decrement: 1 } }
         });
-      }
-      await tx.history.update({
-        where: { id: hist.id },
-        data: { status: newStatus, timeTaken: null },
       });
-    });
 
-    return "Undo successful, stock restored";
+      return "Marked as taken";
+  }
+
+  static async skipDetail(
+      user: UserJWTPayload,
+      detailId: number,
+      dateStr?: string
+  ): Promise<string> {
+      const validatedDate = this.validateIsToday(dateStr);
+      
+      const detail = await prismaClient.scheduleDetail.findFirst({
+          where: { id: detailId, schedule: { medicine: { userId: user.id } } },
+      })
+      if (!detail) throw new ResponseError(404, "Schedule detail not found")
+
+      await prismaClient.history.upsert({
+        where: { detailId_date: { detailId, date: validatedDate } },
+        update: { timeTaken: null, status: "MISSED" },
+        create: { detailId, date: validatedDate, timeTaken: null, status: "MISSED" },
+      })
+
+      return "Marked as missed for this occurrence"
+  }
+
+  static async undoMarkAsTaken(
+      user: UserJWTPayload,
+      detailId: number,
+      dateStr?: string
+  ): Promise<string> {
+      const validatedDate = this.validateIsToday(dateStr);
+
+      const detail = await prismaClient.scheduleDetail.findFirst({
+          where: { id: detailId },
+          include: { schedule: { include: { medicine: true } } },
+      })
+      if (!detail || (detail as any).schedule?.medicine?.userId !== user.id) {
+          throw new ResponseError(404, "Schedule detail not found")
+      }
+
+      const hist = await prismaClient.history.findFirst({ 
+        where: { detailId, date: validatedDate } 
+      });
+      if (!hist) throw new ResponseError(404, "No history to undo");
+
+      const { hours, minutes } = this.extractLocalTime(detail.time as Date);
+
+      // ✅ Build scheduled datetime in UTC
+      const scheduledDateTime = new Date(validatedDate);
+      scheduledDateTime.setUTCHours(hours, minutes, 0, 0);
+
+      const now = new Date();
+      const newStatus: "MISSED" | "PENDING" = now > scheduledDateTime ? "MISSED" : "PENDING";
+
+      await prismaClient.$transaction(async (tx) => {
+        if (hist.status === "DONE") {
+          await tx.medicine.update({
+            where: { id: detail.schedule.medicineId },
+            data: { stock: { increment: 1 } }
+          });
+        }
+        await tx.history.update({
+          where: { id: hist.id },
+          data: { status: newStatus, timeTaken: null },
+        });
+      });
+
+      return "Undo successful, stock restored";
   }
 }

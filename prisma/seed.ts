@@ -3,6 +3,11 @@ import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
+// ✅ Helper: Create UTC date at midnight
+function createUTCDate(year: number, month: number, day: number): Date {
+  return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+}
+
 async function main() {
   console.log("🌱 Starting seed...");
 
@@ -29,7 +34,7 @@ async function main() {
     { name: "Paracetamol", type: "Tablet", dosage: "500mg", stock: 20, minStock: 5, notes: "Pain relief" },
     { name: "Amoxicillin", type: "Capsule", dosage: "250mg", stock: 14, minStock: 3, notes: "Antibiotic" },
     { name: "Vitamin C", type: "Tablet", dosage: "1000mg", stock: 60, minStock: 10, notes: "Immune support" },
-    { name: "Metformin", type: "Tablet", dosage: "850mg", stock: 3, minStock: 10, notes: "For diabetes (LOW STOCK)" }, // LOW STOCK
+    { name: "Metformin", type: "Tablet", dosage: "850mg", stock: 3, minStock: 10, notes: "For diabetes (LOW STOCK)" },
   ];
 
   const medicines = [];
@@ -54,24 +59,24 @@ async function main() {
   // ============================================
   const schedulesData = [
     {
-      medicine: medicines[0], // Aspirin
-      startDate: new Date("2025-01-05"), // Senin, 5 Jan 2025
-      times: ["08:00", "20:00"], // 2x sehari
+      medicine: medicines[0],
+      startDate: createUTCDate(2025, 1, 5), // ✅ UTC midnight
+      times: ["08:00", "20:00"],
     },
     {
-      medicine: medicines[1], // Paracetamol
-      startDate: new Date("2025-01-05"),
-      times: ["09:00", "21:00"], // 2x sehari
+      medicine: medicines[1],
+      startDate: createUTCDate(2025, 1, 5),
+      times: ["09:00", "21:00"],
     },
     {
-      medicine: medicines[2], // Amoxicillin
-      startDate: new Date("2025-01-05"),
-      times: ["07:30", "19:30"], // 2x sehari
+      medicine: medicines[2],
+      startDate: createUTCDate(2025, 1, 5),
+      times: ["07:30", "19:30"],
     },
     {
-      medicine: medicines[3], // Vitamin C
-      startDate: new Date("2025-01-05"),
-      times: ["08:30"], // 1x sehari
+      medicine: medicines[3],
+      startDate: createUTCDate(2025, 1, 5),
+      times: ["08:30"],
     },
   ];
 
@@ -96,45 +101,37 @@ async function main() {
   console.log(`✅ Created ${createdSchedules.length} schedules with details`);
 
   // ============================================
-  // 4. CREATE HISTORY (5-6 Jan: mixed DONE/MISSED, 7 Jan: all PENDING)
+  // 4. CREATE HISTORY (5-7 Jan: UTC dates)
   // ============================================
   
-  // Week range: Senin 5 Jan - Minggu 11 Jan 2025
+  // ✅ Week range: Senin 5 Jan - Rabu 7 Jan 2025 (UTC midnight)
   const weekDates = [
-    new Date("2025-01-05"), // Senin
-    new Date("2025-01-06"), // Selasa
-    new Date("2025-01-07"), // Rabu (TODAY - belum ada yang DONE)
-    new Date("2025-01-08"), // Kamis
-    new Date("2025-01-09"), // Jumat
-    new Date("2025-01-10"), // Sabtu
-    new Date("2025-01-11"), // Minggu
+    { date: createUTCDate(2025, 1, 5), label: "Senin" },    // Monday
+    { date: createUTCDate(2025, 1, 6), label: "Selasa" },   // Tuesday
+    { date: createUTCDate(2025, 1, 7), label: "Rabu" },     // Wednesday (TODAY)
   ];
 
   let historyCount = 0;
 
-  for (const [index, dateObj] of weekDates.entries()) {
-    const dayStart = new Date(dateObj);
-    dayStart.setHours(0, 0, 0, 0);
-
+  for (const [index, { date: dayStart, label }] of weekDates.entries()) {
     for (const schedItem of createdSchedules) {
       for (const detail of schedItem.schedule.details) {
         const timeStr = detail.time.toISOString().substr(11, 5); // "08:00"
         const [hours, minutes] = timeStr.split(":").map(Number);
 
-        // Build scheduled time for this day
+        // ✅ Build scheduled time in UTC
         const scheduledTime = new Date(dayStart);
-        scheduledTime.setHours(hours, minutes, 0, 0);
+        scheduledTime.setUTCHours(hours, minutes, 0, 0);
 
         let status: "PENDING" | "DONE" | "MISSED";
         let timeTaken: Date | null = null;
 
-        // ✅ Logic per day
         if (index === 0) {
           // 5 Jan (Senin): 80% DONE, 20% MISSED
           const rand = Math.random();
           if (rand < 0.8) {
             status = "DONE";
-            timeTaken = new Date(scheduledTime.getTime() + Math.random() * 30 * 60 * 1000); // +0-30 min
+            timeTaken = new Date(scheduledTime.getTime() + Math.random() * 30 * 60 * 1000);
           } else {
             status = "MISSED";
           }
@@ -143,23 +140,22 @@ async function main() {
           const rand = Math.random();
           if (rand < 0.7) {
             status = "DONE";
-            timeTaken = new Date(scheduledTime.getTime() + Math.random() * 45 * 60 * 1000); // +0-45 min
+            timeTaken = new Date(scheduledTime.getTime() + Math.random() * 45 * 60 * 1000);
           } else {
             status = "MISSED";
           }
         } else if (index === 2) {
-          // ✅ 7 Jan (Rabu/TODAY): ALL PENDING (belum ada yang mark as taken)
+          // 7 Jan (Rabu/TODAY): ALL PENDING
           status = "PENDING";
         } else {
-          // 8-11 Jan: Future dates, tidak perlu history (atau bisa dibuat PENDING)
-          continue; // Skip future dates
+          continue;
         }
 
-        // Insert history
+        // ✅ Insert history dengan UTC date
         await prisma.history.create({
           data: {
             detailId: detail.id,
-            date: dayStart,
+            date: dayStart, // Already UTC midnight
             timeTaken,
             status,
           },
