@@ -18,21 +18,29 @@ export class HistoryService {
   }
 
   // ✅ Mencari rentang Senin - Minggu
-  private static getWeekRange() {
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-    
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - daysToMonday);
-    startOfWeek.setHours(0, 0, 0, 0);
+  // ✅ Revisi GetWeekRange di HistoryService.ts
+private static getWeekRange() {
+  const now = new Date();
+  // Buat objek date yang merepresentasikan hari ini jam 00:00 local
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  const dayOfWeek = today.getDay(); // 0 (Sun) - 6 (Sat)
+  
+  // Hitung selisih ke hari Senin
+  // Jika hari ini Minggu (0), selisihnya 6 hari ke belakang.
+  // Jika hari lain, selisihnya (dayOfWeek - 1).
+  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - daysToMonday);
+  startOfWeek.setHours(0, 0, 0, 0);
 
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-    endOfWeek.setHours(23, 59, 59, 999);
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  endOfWeek.setHours(23, 59, 59, 999);
 
-    return { startOfWeek, endOfWeek };
-  }
+  return { startOfWeek, endOfWeek };
+}
 
   // ✅ Validasi agar aksi hanya bisa dilakukan di hari ini
   private static validateIsToday(dateStr?: string): Date {
@@ -108,16 +116,19 @@ export class HistoryService {
     return histories.map(toHistoryResponse);
   }
 
-  static async getRecentActivity(user: UserJWTPayload) {
-    const histories = await prismaClient.history.findMany({
-      where: this.getBaseQuery(user.id),
+  // ✅ Revisi getRecentActivity di HistoryService.ts
+static async getRecentActivity(user: UserJWTPayload) {
+    return await prismaClient.history.findMany({
+      where: {
+        ...this.getBaseQuery(user.id),
+        status: { in: ["DONE", "MISSED"] } // ✅ Hanya DONE/MISSED
+      },
       take: 5,
-      orderBy: { date: 'desc' },
+      orderBy: { updatedAt: 'desc' }, // ✅ Error hilang setelah migrate
       include: {
         detail: { include: { schedule: { include: { medicine: true } } } }
       }
-    });
-    return histories.map(toHistoryResponse);
+    }).then(histories => histories.map(toHistoryResponse));
   }
 
   static async markDetailAsTaken(user: UserJWTPayload, detailId: number, dateStr?: string, timeTakenStr?: string): Promise<string> {
