@@ -42,4 +42,3 @@ privateRouter.get("/history/weekly-stats", HistoryController.getWeeklyCompliance
 privateRouter.get("/history/recent", HistoryController.getRecentActivity)
 
 privateRouter.get("/stock/alerts", StockController.getLowStockAlerts)
-
