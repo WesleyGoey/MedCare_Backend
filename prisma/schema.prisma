@@ -18,8 +18,7 @@ model User {
   password String @db.VarChar(100)
   phone    String @db.VarChar(50)
   age      Int
-//
-//
+
   medicines Medicine[]
 
   @@map("users")
